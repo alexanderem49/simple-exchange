@@ -1,7 +1,7 @@
 import '@agoric/zoe/exported.js';
 import { M } from '@agoric/store';
 import { Far } from '@endo/marshal';
-import { AmountMath, AmountShape } from '@agoric/ertp';
+import { AmountShape } from '@agoric/ertp';
 import { assertIssuerKeywords, swap } from '@agoric/zoe/src/contractSupport';
 import { makeNotifierKit } from '@agoric/notifier';
 import { satisfies } from '@agoric/zoe/src/contractSupport';
@@ -12,31 +12,24 @@ const start = (zcf) => {
   let sellSeats = [];
   let buySeats = [];
 
+  const getBookOrders = () => ({
+    buys: buySeats
+      .filter((s) => !s.hasExited())
+      .map((seat) => ({
+        want: seat.getProposal().want,
+        give: seat.getProposal().give,
+      })),
+    sells: sellSeats
+      .filter((s) => !s.hasExited())
+      .map((seat) => ({
+        want: seat.getProposal().want,
+        give: seat.getProposal().give,
+      })),
+  });
+
   const { notifier, updater } = makeNotifierKit(getBookOrders());
 
-  function dropExit(p) {
-    return {
-      want: p.want,
-      give: p.give,
-    };
-  }
-
-  function flattenOrders(seats) {
-    const activeSeats = seats.filter((s) => !s.hasExited());
-    return activeSeats.map((seat) => dropExit(seat.getProposal()));
-  }
-
-  function getBookOrders() {
-    return {
-      buys: flattenOrders(buySeats),
-      sells: flattenOrders(sellSeats),
-    };
-  }
-
-  // Tell the notifier that there has been a change to the book orders
-  function bookOrdersChanged() {
-    updater.updateState(getBookOrders());
-  }
+  const bookOrdersChanged = () => updater.updateState(getBookOrders());
 
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
@@ -54,10 +47,8 @@ const start = (zcf) => {
   const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, seat) => {
     const offer = swapIfCanTrade(counterOffers, seat);
     if (offer) {
-      // remove the matched offer.
       counterOffers = counterOffers.filter((value) => value !== offer);
     } else {
-      // Save the order in the book
       coOffers.push(seat);
     }
     bookOrdersChanged();
@@ -65,19 +56,18 @@ const start = (zcf) => {
   };
 
   const exchangeOfferHandler = (seat) => {
-    const proposal = seat.getProposal();
+    const { want, give } = seat.getProposal();
 
-    if (proposal.want.Asset) {
+    if (want.Asset) {
       sellSeats = swapIfCanTradeAndUpdateBook(sellSeats, buySeats, seat);
       return 'Order Added';
-    } else if (proposal.give.Asset) {
+    } else if (give.Asset) {
       buySeats = swapIfCanTradeAndUpdateBook(buySeats, sellSeats, seat);
       return 'Order Added';
     } else {
-      // verify if this condition is still necessary
       seat.exit();
       return new Error(
-        `The proposal did not match either a buy or sell order.`,
+        'The proposal did not match either a buy or sell order.',
       );
     }
   };
