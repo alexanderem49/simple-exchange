@@ -12,23 +12,20 @@ const start = (zcf) => {
   let sellSeats = [];
   let buySeats = [];
 
+  const mapOrders = (seats) =>
+    seats
+      .filter((s) => !s.hasExited())
+      .map((seat) => ({
+        want: seat.getProposal().want,
+        give: seat.getProposal().give,
+      }));
+
   const getBookOrders = () => ({
-    buys: buySeats
-      .filter((s) => !s.hasExited())
-      .map((seat) => ({
-        want: seat.getProposal().want,
-        give: seat.getProposal().give,
-      })),
-    sells: sellSeats
-      .filter((s) => !s.hasExited())
-      .map((seat) => ({
-        want: seat.getProposal().want,
-        give: seat.getProposal().give,
-      })),
+    buys: mapOrders(buySeats),
+    sells: mapOrders(sellSeats),
   });
 
   const { notifier, updater } = makeNotifierKit(getBookOrders());
-
   const bookOrdersChanged = () => updater.updateState(getBookOrders());
 
   const satisfiedBy = (xSeat, ySeat) =>
