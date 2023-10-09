@@ -1,0 +1,100 @@
+import '@agoric/zoe/exported.js';
+import { M } from '@agoric/store';
+import { Far } from '@endo/marshal';
+import { AmountMath, AmountShape } from '@agoric/ertp';
+import { assertIssuerKeywords, swap } from '@agoric/zoe/src/contractSupport';
+import { makeNotifierKit } from '@agoric/notifier';
+import { satisfies } from '@agoric/zoe/src/contractSupport';
+
+const start = (zcf) => {
+  assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
+
+  let sellSeats = [];
+  let buySeats = [];
+
+  const getBookOrders = () => ({
+    buys: buySeats
+      .filter((s) => !s.hasExited())
+      .map((seat) => ({
+        want: seat.getProposal().want,
+        give: seat.getProposal().give,
+      })),
+    sells: sellSeats
+      .filter((s) => !s.hasExited())
+      .map((seat) => ({
+        want: seat.getProposal().want,
+        give: seat.getProposal().give,
+      })),
+  });
+
+  const { notifier, updater } = makeNotifierKit(getBookOrders());
+
+  const bookOrdersChanged = () => updater.updateState(getBookOrders());
+
+  const satisfiedBy = (xSeat, ySeat) =>
+    satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
+
+  const swapIfCanTrade = (offers, seat) => {
+    for (const offer of offers) {
+      if (satisfiedBy(offer, seat) && satisfiedBy(seat, offer)) {
+        swap(zcf, seat, offer);
+        return offer;
+      }
+    }
+    return undefined;
+  };
+
+  const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, seat) => {
+    const offer = swapIfCanTrade(counterOffers, seat);
+    if (offer) {
+      // remove the matched offer.
+      counterOffers = counterOffers.filter((value) => value !== offer);
+    } else {
+      // Save the order in the book
+      coOffers.push(seat);
+    }
+    bookOrdersChanged();
+    return counterOffers;
+  };
+
+  const exchangeOfferHandler = (seat) => {
+    const proposal = seat.getProposal();
+
+    if (proposal.want.Asset) {
+      sellSeats = swapIfCanTradeAndUpdateBook(sellSeats, buySeats, seat);
+      return 'Order Added';
+    } else if (proposal.give.Asset) {
+      buySeats = swapIfCanTradeAndUpdateBook(buySeats, sellSeats, seat);
+      return 'Order Added';
+    } else {
+      // verify if this condition is still necessary
+      seat.exit();
+      return new Error(
+        `The proposal did not match either a buy or sell order.`,
+      );
+    }
+  };
+
+  const makeExchangeInvitation = () => {
+    return zcf.makeInvitation(
+      exchangeOfferHandler,
+      'exchange',
+      undefined,
+      M.splitRecord({
+        give: M.or({ Asset: AmountShape }, { Price: AmountShape }),
+        want: M.or({ Asset: AmountShape }, { Price: AmountShape }),
+      }),
+    );
+  };
+
+  const creatorFacet = Far('creatorFacet', {});
+
+  const publicFacet = Far('publicFacet', {
+    makeInvitation: makeExchangeInvitation,
+    getNotifier: () => notifier,
+  });
+
+  return harden({ creatorFacet, publicFacet });
+};
+harden(start);
+export { start };
