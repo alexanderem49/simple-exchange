@@ -1,8 +1,10 @@
 import '@agoric/zoe/exported.js';
 import { M } from '@agoric/store';
+import { Far } from '@endo/marshal';
 import { AmountMath, AmountShape } from '@agoric/ertp';
-import { assertIssuerKeywords } from '@agoric/zoe/src/contractSupport';
+import { assertIssuerKeywords, swap } from '@agoric/zoe/src/contractSupport';
 import { makeNotifierKit } from '@agoric/notifier';
+import { satisfies } from '@agoric/zoe/src/contractSupport';
 
 const start = (zcf) => {
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
@@ -36,24 +38,20 @@ const start = (zcf) => {
     updater.updateState(getBookOrders());
   }
 
-  function swapIfCanTrade(offers, userSeat) {
-    const userAllocation = userSeat.getCurrentAllocation();
+  const satisfiedBy = (xSeat, ySeat) =>
+    satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
+
+  const swapIfCanTrade = (offers, seat) => {
     for (const offer of offers) {
-      const offerAllocation = offer.getCurrentAllocation();
-      if (AmountMath.isEqual(userAllocation, offerAllocation)) {
-        zcf.atomicRearrange(
-          harden([
-            [userSeat, offer, offer.getProposal().want],
-            [offer, userSeat, userSeat.getProposal().want],
-          ]),
-        );
+      if (satisfiedBy(offer, seat) && satisfiedBy(seat, offer)) {
+        swap(zcf, seat, offer);
         return offer;
       }
     }
     return undefined;
-  }
+  };
 
-  function swapIfCanTradeAndUpdateBook(counterOffers, coOffers, seat) {
+  const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, seat) => {
     const offer = swapIfCanTrade(counterOffers, seat);
     if (offer) {
       // remove the matched offer.
@@ -64,7 +62,7 @@ const start = (zcf) => {
     }
     bookOrdersChanged();
     return counterOffers;
-  }
+  };
 
   const exchangeOfferHandler = (seat) => {
     const proposal = seat.getProposal();
@@ -85,7 +83,7 @@ const start = (zcf) => {
   };
 
   const makeExchangeInvitation = () => {
-    zcf.makeInvitation(
+    return zcf.makeInvitation(
       exchangeOfferHandler,
       'exchange',
       undefined,
