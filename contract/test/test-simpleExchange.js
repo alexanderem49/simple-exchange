@@ -11,7 +11,7 @@ import { makeIssuerKit, AmountMath } from '@agoric/ertp';
 const setupSimpleExchange = async (zoe) => {
   const filename = new URL(import.meta.url).pathname;
   const dirname = path.dirname(filename);
-  const contractPath = `${dirname}/../src/simpleExchange_v1.js`;
+  const contractPath = `${dirname}/../src/simpleExchange.js`;
   const contractBundle = await bundleSource(contractPath);
   const contractInstallation = E(zoe).install(contractBundle);
 
