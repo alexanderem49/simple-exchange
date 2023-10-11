@@ -292,7 +292,7 @@
     bufferfromfile agoric-labs/BufferFromFile#Agoric-built
     tmp "^0.2.1"
 
-"@agoric/vat-data@^0.3.1":
+"@agoric/vat-data@^0.3.1", "@agoric/vat-data@beta":
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/@agoric/vat-data/-/vat-data-0.3.1.tgz#b551f50fbd9cfef6f1d6fc28eeb807ced99fe870"
   integrity sha512-ZStdlpQUPFc4nGFjJ3saODtY1W7qgQmeaSXu1EIS05Bh6cD+25so3XB4pvB5fPyQWnD6xeMvCOlLcVgxjo3HgQ==

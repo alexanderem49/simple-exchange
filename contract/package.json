@@ -1,5 +1,5 @@
 {
-  "name": "my-simple-exchange-contract",
+  "name": "simple-exchange-contract",
   "version": "0.1.0",
   "private": true,
   "description": "Contract for the Agoric Dapp",
