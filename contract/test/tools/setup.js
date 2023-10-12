@@ -1,5 +1,4 @@
 import { makeIssuerKit } from '@agoric/ertp';
-import { makeNameHubKit } from '@agoric/vats';
 import path from 'path';
 import bundleSource from '@endo/bundle-source';
 import { E, Far } from '@endo/far';
@@ -9,7 +8,7 @@ import { makeFakeStorageKit } from '@agoric/internal/src/storage-test-utils.js';
 export const setupSimpleExchange = async (zoe, assets) => {
   const filename = new URL(import.meta.url).pathname;
   const dirname = path.dirname(filename);
-  const contractPath = `${dirname}/../src/simpleExchange.js`;
+  const contractPath = `${dirname}/../../src/simpleExchange.js`;
   const contractBundle = await bundleSource(contractPath);
   const contractInstallation = E(zoe).install(contractBundle);
 
@@ -30,7 +29,7 @@ harden(setupSimpleExchange);
 export const setupUpgradableSimpleExchange = async (zoe, assets) => {
   const filename = new URL(import.meta.url).pathname;
   const dirname = path.dirname(filename);
-  const contractPath = `${dirname}/../src/upgradableSimpleExchange.js`;
+  const contractPath = `${dirname}/../../src/upgradableSimpleExchange.js`;
   const contractBundle = await bundleSource(contractPath);
   const contractInstallation = E(zoe).install(contractBundle);
 
@@ -63,22 +62,17 @@ export const setupAssets = () => {
 };
 harden(setupAssets);
 
-export const setupFakeAgoricNamesWithAssets = async () => {
-  const assets = setUpAssets();
-  const { nameHub, nameAdmin } = makeNameHubKit();
-
-  const [issuerHubKit, brandHubKit] = await Promise.all([
-    E(nameAdmin).provideChild('issuer'),
-    E(nameAdmin).provideChild('brand'),
-  ]);
-
+export const setupFakeAgoricNamesWithAssets = async (
+  assets,
+  agoricNamesAdmin,
+) => {
   for (const value of Object.values(assets)) {
     const name = value.issuer.getAllegedName();
-    issuerHubKit.nameAdmin.update(name, value.issuer);
-    brandHubKit.nameAdmin.update(name, value.brand);
+    await Promise.all([
+      E(E(agoricNamesAdmin).lookupAdmin('issuer')).update(name, value.issuer),
+      E(E(agoricNamesAdmin).lookupAdmin('brand')).update(name, value.brand),
+    ]);
   }
-
-  return { agoricNames: nameHub, agoricNamesAdmin: nameAdmin, ...assets };
 };
 harden(setupFakeAgoricNamesWithAssets);
 

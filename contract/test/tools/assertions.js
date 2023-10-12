@@ -5,26 +5,23 @@ export const makeSimpleExchangeAssertions = (t) => {
     t.deepEqual(leftIssuer, rightIssuer, 'Issuers provided does not match');
   };
 
-  const assertOrderBook = async (subscriber, expectedBuys, expectedSells) => {
+  const assertOrderBook = (orderBook, expectedBuys, expectedSells) => {
     const {
       value: { buys, sells },
-    } = await E(subscriber).getUpdateSince();
+    } = orderBook;
 
     t.deepEqual(buys, expectedBuys, 'Buys list does not match the expected');
     t.deepEqual(sells, expectedSells, 'Sells list does not match the expected');
   };
 
-  const assertOfferResult = async (seat, expected) => {
-    const offerResult = await E(seat).getOfferResult();
-
+  const assertOfferResult = (offerResult, expected) => {
     t.deepEqual(
       offerResult,
       expected,
       `Offer result ${offerResult} does not match the expected ${expected}`,
     );
   };
-  const assertPayoutAmount = async (issuer, payout, expectedAmount) => {
-    const amount = await issuer.getAmountOf(payout);
+  const assertPayoutAmount = (amount, expectedAmount) => {
     t.deepEqual(
       amount,
       expectedAmount,
