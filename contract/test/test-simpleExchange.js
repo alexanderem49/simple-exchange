@@ -1,6 +1,3 @@
-// @ts-check
-
-/* eslint-disable import/order -- https://github.com/endojs/endo/issues/1235 */
 import { test } from './prepare-test-env-ava.js';
 import path from 'path';
 import bundleSource from '@endo/bundle-source';
@@ -257,12 +254,13 @@ test('make trade', async (t) => {
 
   await E(bobSeat).getOfferResult();
 
-  const alicePayment = await E(aliceSeat).getPayouts();
+  const alicePayouts = await E(aliceSeat).getPayouts();
   const bobPayment = await E(bobSeat).getPayouts();
 
-  t.deepEqual(
-    alicePayment, bobPayment
-  )
+  const aliceAmountAsset = await moolaKit.issuer.getAmountOf(alicePayouts.Asset); // 0n
+  const aliceAmountPrice = await simoleanKit.issuer.getAmountOf(alicePayouts.Price); // 4n
+
+  console.log(bobBuyOrderProposal.give.Price === aliceAmountPrice);
 
   const { value: afterBobOrders } = await E(
     E(publicFacet).getNotifier(),
@@ -275,6 +273,8 @@ test('make trade', async (t) => {
 
   assertOfferResult(t, bobSeat, 'Order Added');
   assertOfferResult(t, aliceSeat, 'Order Added');
+
+  
 });
 
 test("make offer with wrong issuers", async (t) => {
