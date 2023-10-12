@@ -1,21 +1,21 @@
 import { test } from './prepare-test-env-ava.js';
 import { E } from '@endo/eventual-send';
+import { AmountMath } from '@agoric/ertp';
 import { makeScalarMapStore } from '@agoric/store';
+import { makeDefaultTestContext } from '@agoric/smart-wallet/test/contexts.js';
+import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
 import { buildRootObject as buildBankVatRoot } from '@agoric/vats/src/vat-bank.js';
+import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
 import {
   makeMockTestSpace,
   headValue,
 } from '@agoric/smart-wallet/test/supports.js';
-import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
 import {
   setupAssets,
   setupSmartWallet,
   setupUpgradableSimpleExchange,
   setupFakeAgoricNamesWithAssets,
-} from './setup.js';
-import { makeDefaultTestContext } from '@agoric/smart-wallet/test/contexts.js';
-import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
-import { AmountMath } from '@agoric/ertp';
+} from './tools/setup.js';
 
 test.before(async (t) => {
   const withBankManager = async () => {
