@@ -2,9 +2,12 @@ import '@agoric/zoe/exported.js';
 import { M } from '@agoric/store';
 import { Far } from '@endo/marshal';
 import { AmountShape } from '@agoric/ertp';
-import { assertIssuerKeywords, swap } from '@agoric/zoe/src/contractSupport';
 import { makeNotifierKit } from '@agoric/notifier';
-import { satisfies } from '@agoric/zoe/src/contractSupport';
+import {
+  assertIssuerKeywords,
+  swap,
+  satisfies,
+} from '@agoric/zoe/src/contractSupport';
 
 const start = (zcf) => {
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
