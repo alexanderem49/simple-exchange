@@ -1,6 +1,6 @@
 import { E } from '@endo/eventual-send';
 
-export const makeSimpleExchangeAssertions = () => {
+export const makeSimpleExchangeAssertions = (t) => {
   const assertIssuer = (leftIssuer, rightIssuer) => {
     t.deepEqual(leftIssuer, rightIssuer, 'Issuers provided does not match');
   };

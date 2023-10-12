@@ -6,22 +6,14 @@ import { E, Far } from '@endo/far';
 import { makeFakeMarshaller } from '@agoric/notifier/tools/testSupports.js';
 import { makeFakeStorageKit } from '@agoric/internal/src/storage-test-utils.js';
 
-export const setupAssets = () => {
-  const moolaKit = makeIssuerKit('Moola');
-  const simoleanKit = makeIssuerKit('Simoleans');
-
-  return harden({ moolaKit, simoleanKit });
-};
-harden(setupAssets);
-
-export const setupSimpleExchange = async (zoe) => {
+export const setupSimpleExchange = async (zoe, assets) => {
   const filename = new URL(import.meta.url).pathname;
   const dirname = path.dirname(filename);
   const contractPath = `${dirname}/../src/simpleExchange.js`;
   const contractBundle = await bundleSource(contractPath);
   const contractInstallation = E(zoe).install(contractBundle);
 
-  const { moolaKit, simoleanKit } = setupAssets();
+  const { moolaKit, simoleanKit } = assets;
 
   const { publicFacet, creatorFacet, instance } = await E(zoe).startInstance(
     contractInstallation,
@@ -33,9 +25,9 @@ export const setupSimpleExchange = async (zoe) => {
 
   return harden({ publicFacet, creatorFacet, instance });
 };
-harden(setupSimpleExchange)
+harden(setupSimpleExchange);
 
-export const setupUpgradableSimpleExchange = async (zoe) => {
+export const setupUpgradableSimpleExchange = async (zoe, assets) => {
   const filename = new URL(import.meta.url).pathname;
   const dirname = path.dirname(filename);
   const contractPath = `${dirname}/../src/upgradableSimpleExchange.js`;
@@ -48,7 +40,7 @@ export const setupUpgradableSimpleExchange = async (zoe) => {
   const marshaller = Far('fake marshaller', { ...makeFakeMarshaller() });
 
   const privateArgs = harden({ marshaller, storageNode });
-  const { moolaKit, simoleanKit } = setupAssets();
+  const { moolaKit, simoleanKit } = assets;
 
   const { publicFacet, creatorFacet, instance } = await E(zoe).startInstance(
     contractInstallation,
@@ -62,6 +54,14 @@ export const setupUpgradableSimpleExchange = async (zoe) => {
 
   return harden({ publicFacet, creatorFacet, instance });
 };
+
+export const setupAssets = () => {
+  const moolaKit = makeIssuerKit('Moola');
+  const simoleanKit = makeIssuerKit('Simolean');
+
+  return harden({ moolaKit, simoleanKit });
+};
+harden(setupAssets);
 
 export const setupFakeAgoricNamesWithAssets = async () => {
   const assets = setUpAssets();
