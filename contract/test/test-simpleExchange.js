@@ -559,7 +559,7 @@ test("Bob makes offer with null or invalid shapes on the proposals", async (t) =
         give: { Asset: moola(3n) },
         want: { Price: {} },
       }),
-      errorMessage: 'In "getAssetKindByBrand" method of (ZoeStorageManager makeOfferAccess): arg 0: "[undefined]" - Must be a remotable Brand, not undefined'
+      errorMessage: 'In "getAssetKindByBrand" method of (ZoeStorageManager makeOfferAccess): arg 0: undefined "[undefined]" - Must be a remotable (Brand)'
     },
   ]
 
