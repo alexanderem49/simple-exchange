@@ -3,8 +3,9 @@ import { E } from '@endo/eventual-send';
 import { setUpZoeForTest } from '@agoric/inter-protocol/test/supports.js';
 import { makeIssuerKit, AmountMath, AssetKind } from '@agoric/ertp';
 import { details } from '@agoric/assert';
-import { makeSimpleExchangeAssertions } from './assertions.js';
-import { setupSimpleExchange, setupAssets } from './setup.js';
+import { makeSimpleExchangeAssertions } from './tools/assertions.js';
+import { makeSimpleExchangeHelpers } from './tools/helpers.js';
+import { setupSimpleExchange, setupAssets } from './tools/setup.js';
 
 test.beforeEach(async (t) => {
   const { zoe } = await setUpZoeForTest(() => {});
@@ -23,47 +24,44 @@ test.beforeEach(async (t) => {
 });
 
 test.only('make sell offer', async (t) => {
-  const { zoe, assets, moola, simoleans } = t.context;
+  const { zoe, assets } = t.context;
   const { moolaKit, simoleanKit } = assets;
   const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(
-    zoe,
-    assets,
-  );
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
-  const aliceIssuers = await E(zoe).getIssuers(instance);
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  assertions.assertIssuer(aliceIssuers.Asset, moolaKit.issuer);
-  assertions.assertIssuer(aliceIssuers.Price, simoleanKit.issuer);
-
-  const aliceNotifier = await E(publicFacet).getNotifier();
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
-  await assertions.assertOrderBook(aliceNotifier, expectedBuys, expectedSells);
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
+  const invitation = await E(publicFacet).makeInvitation();
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+    assets,
+    3n,
+    4n,
   );
 
-  await E(aliceSeat).getOfferResult();
-  await assertions.assertOfferResult(aliceSeat, 'Order Added');
+  const seat = await E(zoe).offer(
+    invitation,
+    sellOrderProposal,
+    sellPayment,
+  );
+
+  const offerResult = await E(seat).getOfferResult();
+  assertions.assertOfferResult(offerResult, 'Order Added');
 
   expectedBuys = [];
-  expectedSells = [aliceSellOrderProposal];
-  await assertions.assertOrderBook(aliceNotifier, expectedBuys, expectedSells);
+  expectedSells = [sellOrderProposal];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 });
 
 test('make buy offer', async (t) => {
