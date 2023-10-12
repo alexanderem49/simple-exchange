@@ -1,36 +1,13 @@
 import { E, Far } from '@endo/far';
-import { makeFakeMarshaller } from '@agoric/notifier/tools/testSupports.js';
-import { makeFakeStorageKit } from '@agoric/internal/src/storage-test-utils.js';
 import { makeFakeAva } from '../tools/fakeAva.js';
-
-const init = async () => {
-  const rootPath = 'root';
-  const { rootNode } = makeFakeStorageKit(rootPath);
-  const storageNode = rootNode.makeChildNode('simpleExchange');
-  const marshaller = Far('fake marshaller', { ...makeFakeMarshaller() });
-
-  const fakeAva = makeFakeAva();
-
-  return harden({ storageNode, marshaller, fakeAva });
-};
-
-const initSimpleExchange = async (
-  zoe,
-  installation,
-  issuerKeywordRecord,
-  privateArgs,
-) => {
-  return await E(zoe).startInstance(
-    installation,
-    issuerKeywordRecord,
-    undefined,
-    privateArgs,
-  );
-};
-
-const dummyEventLoopCallback = async () => {
-  return Promise.resolve('Dummy iterate event loop');
-};
+import { makeFakeBoard } from '@agoric/vats/tools/board-utils.js';
+import { makeSimpleExchangeAssertions } from '../tools/assertions.js';
+import { makeSimpleExchangeHelpers } from '../tools/helpers.js';
+import {
+  setupAssets,
+  setupSmartWallet,
+  setupFakeAgoricNamesWithAssets,
+} from './setup.js';
 
 export const buildRootObject = async () => {
   let vatAdmin;
@@ -39,24 +16,15 @@ export const buildRootObject = async () => {
   let agoricNamesAdmin;
   let publicFacet;
   let creatorFacet;
+  let instance;
+  let assertions;
+  let helpers;
 
-  const { storageNode, marshaller, fakeAva } = init();
-
-  /**
-   * Since 'eventLoopIteration' is not allowed in SwingSet we need a deterministic way to verify if the recorderKit is done
-   * publishing new state before we assert our operations succeeded or not.
-   * This method tries waiting for the `lastUpdateCount` increment after any performed operation we wish to test.
-   */
-  const refreshLastUpdateCount = async (subscriber) => {
-    ({ updateCount: lastUpdateCount } = await E(subscriber).getUpdateSince());
-    console.log({
-      lastUpdateCount,
-    });
-  };
+  const assets = setupAssets();
+  const fakeAva = makeFakeAva();
 
   return Far('root', {
     bootstrap: async (vats, devices) => {
-      // Initialize static vats
       vatAdmin = await E(vats.vatAdmin).createVatAdminService(devices.vatAdmin);
       ({ zoeService: zoe } = await E(vats.zoe).buildZoe(
         vatAdmin,
@@ -67,25 +35,61 @@ export const buildRootObject = async () => {
         vats.agoricNames,
       ).getNameHubKit());
 
-      const [simpleExchangeV1Bundle, issuerHubKit, brandHubKit] =
-        await Promise.all([
-          E(vatAdmin).getBundleIDByName('simpleExchange_v1'),
-          E(agoricNamesAdmin).provideChild('issuer'),
-          E(agoricNamesAdmin).provideChild('brand'),
-        ]);
+      await setupFakeAgoricNamesWithAssets(assets, agoricNamesAdmin);
 
-      console.log({
-        issuerHubKit,
-        brandHubKit,
+      const simpleExchangeV1Bundle = await E(vatAdmin).getBundleIDByName(
+        'simpleExchange_v1',
+      );
+
+      const simpleExchangeV1Installation = await E(zoe).installBundleID(
+        simpleExchangeV1Bundle,
+      );
+
+      const issuerKeywordRecord = harden({
+        Asset: assets.moolaKit.issuer,
+        Price: assets.simoleanKit.issuer,
       });
 
-      const writes = [...Object.values(assets)].map(async (value) => {
-        const name = value.issuer.getAllegedName();
-        await Promise.all([
-          E(issuerHubKit.nameAdmin).update(name, value.issuer),
-          E(brandHubKit.nameAdmin).update(name, value.brand),
-        ]);
-      });
+      const rootPath = 'root';
+      const { rootNode } = makeFakeStorageKit(rootPath);
+      const storageNode = rootNode.makeChildNode('simpleExchange');
+      const marshaller = makeFakeBoard().getReadonlyMarshaller();
+
+      const privateArgs = harden({ marshaller, storageNode });
+
+      const simpleExchangeFacets = await E(zoe).startInstance(
+        simpleExchangeV1Installation,
+        issuerKeywordRecord,
+        undefined,
+        privateArgs,
+      );
+
+      publicFacet = simpleExchangeFacets.publicFacet;
+      creatorFacet = simpleExchangeFacets.creatorFacet;
+      instance = simpleExchangeFacets.instance;
+
+      assertions = makeSimpleExchangeAssertions(fakeAva);
+      helpers = makeSimpleExchangeHelpers();
+
+      return true;
+    },
+    addOffer: async () => {
+      const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+        assets,
+        3n,
+        5n,
+      );
+
+      const invitation = await E(publicFacet).makeInvitation();
+
+      const seat = await E(zoe).offer(
+        invitation,
+        sellOrderProposal,
+        sellPayment,
+      );
+
+      const offerResult = await E(seat).getOfferResult();
+      assertions.assertOfferResult(offerResult, 'Order Added');
     },
   });
 };
