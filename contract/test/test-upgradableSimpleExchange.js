@@ -72,7 +72,7 @@ test('test empty subscriber', async (t) => {
   t.deepEqual(state.value, { buys: [], sells: [] });
 });
 
-test('test make sell offer', async (t) => {
+test.only('test make sell offer', async (t) => {
   const {
     zoe,
     contractInstallation,
@@ -114,7 +114,7 @@ test('test make sell offer', async (t) => {
 
   const subscriber = await E(publicFacet).getSubscriber();
   const state = await E(subscriber).getUpdateSince();
-
+  console.log(state.value.sells);
   t.deepEqual(state.value, { buys: [], sells: [aliceSellOrderProposal] });
 });
 
@@ -164,7 +164,7 @@ test('test make buy offer', async (t) => {
   t.deepEqual(state.value, { buys: [bobBuyOrderProposal], sells: [] });
 });
 
-test.only('test make trade', async (t) => {
+test('test make trade', async (t) => {
   const {
     zoe,
     contractInstallation,
