@@ -1,8 +1,10 @@
-import { E } from '@endo/eventual-send';
-
 export const makeSimpleExchangeAssertions = (t) => {
   const assertIssuer = (leftIssuer, rightIssuer) => {
     t.deepEqual(leftIssuer, rightIssuer, 'Issuers provided does not match');
+  };
+
+  const assertNotIssuer = (leftIssuer, rightIssuer) => {
+    t.notDeepEqual(leftIssuer, rightIssuer, 'Issuers provided match');
   };
 
   const assertOrderBook = (orderBook, expectedBuys, expectedSells) => {
@@ -36,6 +38,7 @@ export const makeSimpleExchangeAssertions = (t) => {
 
   return harden({
     assertIssuer,
+    assertNotIssuer,
     assertOrderBook,
     assertOfferResult,
     assertPayoutAmount,
