@@ -358,7 +358,7 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   await Promise.all(promises);
 });
 
-test.only('make offer with NFT', async (t) => {
+test('make offer with NFT', async (t) => {
   const { zoe, assets } = t.context;
   const { simoleanKit } = assets;
 
