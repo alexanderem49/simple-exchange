@@ -1,29 +1,30 @@
 import { test } from './prepare-test-env-ava.js';
 import { E } from '@endo/eventual-send';
 import { setUpZoeForTest } from '@agoric/inter-protocol/test/supports.js';
-import { makeIssuerKit, AmountMath, AssetKind } from '@agoric/ertp';
-import { details } from '@agoric/assert';
+import { AmountMath, AssetKind, makeIssuerKit } from '@agoric/ertp';
 import { makeSimpleExchangeAssertions } from './tools/assertions.js';
 import { makeSimpleExchangeHelpers } from './tools/helpers.js';
 import { setupSimpleExchange, setupAssets } from './tools/setup.js';
 
 test.beforeEach(async (t) => {
-  const { zoe } = await setUpZoeForTest(() => {});
+  const { zoe } = await setUpZoeForTest(() => { });
   const assets = setupAssets();
 
   const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
   const moola = makeSimpleMake(assets.moolaKit.brand);
   const simoleans = makeSimpleMake(assets.simoleanKit.brand);
+  const nothing = makeSimpleMake(assets.nothingKit.brand);
 
   t.context = {
     zoe,
     assets,
     moola,
     simoleans,
+    nothing,
   };
 });
 
-test.only('make sell offer', async (t) => {
+test('make sell offer', async (t) => {
   const { zoe, assets } = t.context;
   const { moolaKit, simoleanKit } = assets;
   const assertions = makeSimpleExchangeAssertions(t);
@@ -65,491 +66,375 @@ test.only('make sell offer', async (t) => {
 });
 
 test('make buy offer', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  const invitation = await E(publicFacet).makeInvitation();
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
+    assets,
+    3n,
+    4n,
   );
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
-
-  const aliceInstallation = await E(zoe).getInstallation(aliceInvitation);
-  t.is(aliceInstallation, await contractInstallation);
-  const aliceIssuers = await E(zoe).getIssuers(instance);
-
-  assert(
-    aliceIssuers.Asset === moolaKit.issuer,
-    details`The Asset issuer should be the moola issuer`,
-  );
-  assert(
-    aliceIssuers.Price === simoleanKit.issuer,
-    details`The Price issuer should be the simolean issuer`,
+  const seat = await E(zoe).offer(
+    invitation,
+    buyOrderProposal,
+    buyPayment
   );
 
-  // assert order book is empty
-  const aliceNotifier = await E(publicFacet).getNotifier();
+  const offerResult = await E(seat).getOfferResult();
+  assertions.assertOfferResult(offerResult, 'Order Added');
 
-  const { value: initialOrders } = await E(
-    await E(publicFacet).getNotifier(),
-  ).getUpdateSince();
-  t.deepEqual(
-    initialOrders,
-    { buys: [], sells: [] },
-    `order notifier is initialized`,
-  );
-
-  const aliceBuyOrderProposal = harden({
-    want: { Asset: moola(3n) },
-    give: { Price: simoleans(4n) },
-  });
-
-  const aliceSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-  const alicePayments = { Price: aliceSimoleansPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceBuyOrderProposal,
-    alicePayments,
-  );
-
-  let offerResult = await E(aliceSeat).getOfferResult();
-  t.deepEqual(offerResult, 'Order Added');
-
-  let {
-    value: { buys, sells },
-  } = await E(aliceNotifier).getUpdateSince();
-
-  t.deepEqual(sells, [], 'sells list should be empty');
-  t.deepEqual(buys, [aliceBuyOrderProposal], 'buys list should NOT be empty');
+  expectedBuys = [buyOrderProposal];
+  expectedSells = [];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 });
 
 test('make trade', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
-  );
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
 
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  const moolaValue = 3n;
+  const simoleanValue = 4n;
+
+  // Alice makes a sell offer
   const aliceInvitation = await E(publicFacet).makeInvitation();
-
-  const aliceInstallation = await E(zoe).getInstallation(aliceInvitation);
-  t.is(aliceInstallation, await contractInstallation);
-  const aliceIssuers = await E(zoe).getIssuers(instance);
-
-  assert(
-    aliceIssuers.Asset === moolaKit.issuer,
-    details`The Asset issuer should be the moola issuer`,
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+    assets,
+    moolaValue,
+    simoleanValue,
   );
-  assert(
-    aliceIssuers.Price === simoleanKit.issuer,
-    details`The Price issuer should be the simolean issuer`,
-  );
-
-  const { value: initialOrders } = await E(
-    await E(publicFacet).getNotifier(),
-  ).getUpdateSince();
-  t.deepEqual(
-    initialOrders,
-    { buys: [], sells: [] },
-    `order notifier is initialized`,
-  );
-
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
 
   const aliceSeat = await E(zoe).offer(
     aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  await E(aliceSeat).getOfferResult();
+  const offerResult = await E(aliceSeat).getOfferResult();
+  assertions.assertOfferResult(offerResult, 'Order Added');
 
+  expectedBuys = [];
+  expectedSells = [sellOrderProposal];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  // Bob makes a buy offer
   const bobInvitation = await E(publicFacet).makeInvitation();
-
-  const bobInstallation = await E(zoe).getInstallation(bobInvitation);
-  t.is(bobInstallation, await contractInstallation);
-  const bobIssuers = await E(zoe).getIssuers(instance);
-
-  assert(
-    bobIssuers.Asset === moolaKit.issuer,
-    details`The Asset issuer should be the moola issuer`,
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
+    assets,
+    moolaValue,
+    simoleanValue,
   );
-  assert(
-    bobIssuers.Price === simoleanKit.issuer,
-    details`The Price issuer should be the simolean issuer`,
-  );
-
-  const bobBuyOrderProposal = harden({
-    want: { Asset: moola(3n) },
-    give: { Price: simoleans(4n) },
-  });
-
-  const bobSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-  const bobPayments = { Price: bobSimoleansPayment };
 
   const bobSeat = await E(zoe).offer(
     bobInvitation,
-    bobBuyOrderProposal,
-    bobPayments,
+    buyOrderProposal,
+    buyPayment,
   );
 
-  await E(bobSeat).getOfferResult();
+  const bobOfferResult = await E(bobSeat).getOfferResult();
+  assertions.assertOfferResult(bobOfferResult, 'Order Added');
 
-  const alicePayouts = await E(aliceSeat).getPayouts();
-  const bobPayment = await E(bobSeat).getPayouts();
+  // As the trade is made, the order book should be cleared
+  expectedBuys = [];
+  expectedSells = [];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  const aliceAmountAsset = await moolaKit.issuer.getAmountOf(
-    alicePayouts.Asset,
-  ); // 0n
-  const aliceAmountPrice = await simoleanKit.issuer.getAmountOf(
-    alicePayouts.Price,
-  ); // 4n
+  // Asset assets are swapped
+  const bobPayout = await E(bobSeat).getPayout('Asset');
+  const alicePayout = await E(aliceSeat).getPayout('Price');
 
-  console.log(bobBuyOrderProposal.give.Price === aliceAmountPrice);
+  const amountMoola = await E(moolaKit.issuer).getAmountOf(bobPayout);
+  const amountSimolean = await E(simoleanKit.issuer).getAmountOf(alicePayout);
 
-  const { value: afterBobOrders } = await E(
-    E(publicFacet).getNotifier(),
-  ).getUpdateSince();
-  t.deepEqual(
-    afterBobOrders,
-    { buys: [], sells: [] },
-    `order notifier is updated when Bob fulfills the order`,
-  );
-
-  assertOfferResult(t, bobSeat, 'Order Added');
-  assertOfferResult(t, aliceSeat, 'Order Added');
+  assertions.assertPayoutAmount(amountMoola.value, moolaValue);
+  assertions.assertPayoutAmount(amountSimolean.value, simoleanValue);
 });
 
 test('make offer with wrong issuers', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit, nothingKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  assertions.assertNotIssuer(issuers.Asset, nothingKit.issuer);
+  assertions.assertNotIssuer(issuers.Price, nothingKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  let invitation = await E(publicFacet).makeInvitation();
+  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+    assets,
+    3n,
+    4n,
+    "wrongWantIssuer"
   );
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
-
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
+  let seatPromise = E(zoe).offer(
+    invitation,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  await E(aliceSeat).getOfferResult();
+  await assertions.assertThrowError(seatPromise, expectedError);
 
-  const bobInvitation = await E(publicFacet).makeInvitation();
+  invitation = await E(publicFacet).makeInvitation();
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+    assets,
+    3n,
+    4n,
+    "wrongGiveIssuer"
+  ));
 
-  const nothingKit = makeIssuerKit('nothing', AssetKind.NAT);
-  const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
-  const nothing = makeSimpleMake(nothingKit.brand);
-
-  const aliceInstallation = await E(zoe).getInstallation(bobInvitation);
-  t.is(aliceInstallation, await contractInstallation);
-  const aliceIssuers = await E(zoe).getIssuers(instance);
-
-  assert(
-    aliceIssuers.Asset !== nothingKit.issuer,
-    details`The wrong asset issuer should not be in th asset issuers`,
-  );
-  assert(
-    aliceIssuers.Price !== nothingKit.issuer,
-    details`The wrong asset issuer should not be in the price issuers`,
+  seatPromise = E(zoe).offer(
+    invitation,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  const bobBuyOrderProposal = harden({
-    want: { Asset: moola(3n) },
-    give: { Price: nothing(4n) },
-  });
-
-  const bobNothingPayment = nothingKit.mint.mintPayment(nothing(4n));
-  const bobPayments = { Price: bobNothingPayment };
-
-  await t.throwsAsync(
-    () => E(zoe).offer(bobInvitation, bobBuyOrderProposal, bobPayments),
-    {
-      message:
-        'key "[Alleged: nothing brand]" not found in collection "brandToIssuerRecord"',
-    },
-  );
+  await assertions.assertThrowError(seatPromise, expectedError);
 });
 
 test('make offer with offerProposal missing attribute', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  let invitation = await E(publicFacet).makeInvitation();
+  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+    assets,
+    3n,
+    4n,
+    "missingWant"
+  );
+  let seatPromise = E(zoe).offer(
+    invitation,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
+  await assertions.assertThrowError(seatPromise, expectedError);
 
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
+  invitation = await E(publicFacet).makeInvitation();
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+    assets,
+    3n,
+    4n,
+    "missingGive"
+  ));
+  seatPromise = E(zoe).offer(
+    invitation,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  await E(aliceSeat).getOfferResult();
-
-  let bobInvitation = await E(publicFacet).makeInvitation();
-
-  const bobBuyOrderProposalNoPrice = harden({
-    want: { Asset: moola(3n) },
-  });
-
-  let bobSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-  let bobPayments = { Price: bobSimoleansPayment };
-
-  await t.throwsAsync(
-    () => E(zoe).offer(bobInvitation, bobBuyOrderProposalNoPrice, bobPayments),
-    {
-      message:
-        '"exchange" proposal: give: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-  );
-
-  bobInvitation = await E(publicFacet).makeInvitation();
-
-  const bobBuyOrderProposalNoAsset = harden({
-    give: { Price: simoleans(4n) },
-  });
-
-  bobSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-  bobPayments = { Price: bobSimoleansPayment };
-
-  await t.throwsAsync(
-    () => E(zoe).offer(bobInvitation, bobBuyOrderProposalNoAsset, bobPayments),
-    {
-      message:
-        '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-  );
+  await assertions.assertThrowError(seatPromise, expectedError);
 });
 
 test('make offer without offerProposal', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
 
-  const { publicFacet } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  const invitation = await E(publicFacet).makeInvitation();
+
+  const seatPromise = E(zoe).offer(
+    invitation,
+    undefined,
+    undefined,
   );
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
-
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
-  );
-
-  await E(aliceSeat).getOfferResult();
-
-  const bobInvitation = await E(publicFacet).makeInvitation();
-
-  await t.throwsAsync(() => E(zoe).offer(bobInvitation, undefined, undefined), {
-    message:
-      '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-  });
+  await assertions.assertThrowError(seatPromise, '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]');
 });
 
-test('Bob makes offer with null or invalid shapes on the proposals', async (t) => {
-  // @ts-ignore
-  const { zoe, contractInstallation, moolaKit, simoleanKit, moola, simoleans } =
-    t.context;
+test('offers with null or invalid shapes on the proposals', async (t) => {
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
-  );
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
 
-  const aliceInvitation = await E(publicFacet).makeInvitation();
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  const invalidShapes = helpers.makeInvalidSellOffer(
+    assets,
+    3n,
+    4n,
+    "invalidShapes"
+  )
+
+  const promises = invalidShapes.map(async ({ sellOrderProposal, sellPayment, expectedError }) => {
+    const invitation = await E(publicFacet).makeInvitation();
+    const seatPromise = E(zoe).offer(
+      invitation,
+      sellOrderProposal,
+      sellPayment,
+    );
+
+    await assertions.assertThrowError(seatPromise, expectedError);
   });
 
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
+  await Promise.all(promises);
+});
+
+test.only('make offer with NFT', async (t) => {
+  const { zoe, assets } = t.context;
+  const { simoleanKit } = assets;
+
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
+
+  // Make NFT kit
+  const moolaKit = makeIssuerKit("Moola", AssetKind.SET);
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, { moolaKit, simoleanKit });
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const notifier = await E(publicFacet).getNotifier();
+  let orderBook = await E(notifier).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  const moolaAttributes = { name: "Moola", description: "A set of moola" };
+  const simoleanAmount = 4n;
+
+  // Alice makes a sell offer
+  const aliceInvitation = await E(publicFacet).makeInvitation();
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOfferNFT(
+    { moolaKit, simoleanKit },
+    moolaAttributes,
+    simoleanAmount,
+  );
 
   const aliceSeat = await E(zoe).offer(
     aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
+    sellOrderProposal,
+    sellPayment,
   );
 
-  await E(aliceSeat).getOfferResult();
+  const aliceOfferResult = await E(aliceSeat).getOfferResult();
+  assertions.assertOfferResult(aliceOfferResult, 'Order Added');
 
-  const wrongProposals = [
-    {
-      proposal: harden({
-        give: null,
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        'In "offer" method of (ZoeService): arg 1?: give?: null null - Must be a copyRecord',
-    },
-    {
-      proposal: harden({
-        give: {},
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        '"exchange" proposal: give: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-    {
-      proposal: harden({
-        give: undefined,
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        '"exchange" proposal: give: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-    {
-      proposal: harden({
-        give: { Price: null },
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        'In "offer" method of (ZoeService): arg 1?: give?: Price: [1]: null - Must be a copyRecord to match a copyRecord pattern: {"brand":"[match:remotable]","value":"[match:or]"}',
-    },
-    {
-      proposal: harden({
-        give: { Price: undefined },
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        'In "offer" method of (ZoeService): arg 1?: give?: Price: [1]: "[undefined]" - Must be a copyRecord to match a copyRecord pattern: {"brand":"[match:remotable]","value":"[match:or]"}',
-    },
-    {
-      proposal: harden({
-        give: { Price: {} },
-        want: { Asset: simoleans(4n) },
-      }),
-      errorMessage:
-        'In "offer" method of (ZoeService): arg 1?: give?: Price: [1]: {} - Must have missing properties ["value","brand"]',
-    },
-    ///////////
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: null,
-      }),
-      errorMessage:
-        'In "offer" method of (ZoeService): arg 1?: want?: null null - Must be a copyRecord',
-    },
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: {},
-      }),
-      errorMessage:
-        '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: undefined,
-      }),
-      errorMessage:
-        '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
-    },
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: { Price: null },
-      }),
-      errorMessage: "Cannot read properties of null (reading 'brand')",
-    },
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: { Price: undefined },
-      }),
-      errorMessage: "Cannot read properties of undefined (reading 'brand')",
-    },
-    {
-      proposal: harden({
-        give: { Asset: moola(3n) },
-        want: { Price: {} },
-      }),
-      errorMessage:
-        'In "getAssetKindByBrand" method of (ZoeStorageManager makeOfferAccess): arg 0: undefined "[undefined]" - Must be a remotable (Brand)',
-    },
-  ];
+  expectedBuys = [];
+  expectedSells = [sellOrderProposal];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  for (let i = 0; i < wrongProposals.length; i++) {
-    const bobProposal = wrongProposals[i];
+  // Bob makes a buy offer
+  const bobInvitation = await E(publicFacet).makeInvitation();
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOfferNFT(
+    { moolaKit, simoleanKit },
+    moolaAttributes,
+    simoleanAmount,
+  );
 
-    const bobInvitation = await E(publicFacet).makeInvitation();
+  const bobSeat = await E(zoe).offer(
+    bobInvitation,
+    buyOrderProposal,
+    buyPayment,
+  );
 
-    const bobSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-    const bobPayments = { Price: bobSimoleansPayment };
+  const bobOfferResult = await E(bobSeat).getOfferResult();
+  assertions.assertOfferResult(bobOfferResult, 'Order Added');
 
-    await t.throwsAsync(
-      () => E(zoe).offer(bobInvitation, bobProposal.proposal, bobPayments),
-      { message: bobProposal.errorMessage },
-    );
-  }
+  // As the trade is made, the order book should be cleared
+  expectedBuys = [];
+  expectedSells = [];
+  orderBook = await E(notifier).getUpdateSince();
+  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+
+  // Asset assets are swapped
+  const bobPayout = await E(bobSeat).getPayout('Asset');
+  const alicePayout = await E(aliceSeat).getPayout('Price');
+
+  const amountMoola = await E(moolaKit.issuer).getAmountOf(bobPayout);
+  const amountSimolean = await E(simoleanKit.issuer).getAmountOf(alicePayout);
+
+  assertions.assertPayoutAmount(amountMoola.value, [moolaAttributes]);
+  assertions.assertPayoutAmount(amountSimolean.value, simoleanAmount);
 });

@@ -57,8 +57,9 @@ export const setupUpgradableSimpleExchange = async (zoe, assets) => {
 export const setupAssets = () => {
   const moolaKit = makeIssuerKit('Moola');
   const simoleanKit = makeIssuerKit('Simolean');
+  const nothingKit = makeIssuerKit('Nothing');
 
-  return harden({ moolaKit, simoleanKit });
+  return harden({ moolaKit, simoleanKit, nothingKit });
 };
 harden(setupAssets);
 
