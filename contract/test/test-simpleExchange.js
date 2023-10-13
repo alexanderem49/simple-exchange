@@ -7,7 +7,7 @@ import { makeSimpleExchangeHelpers } from './tools/helpers.js';
 import { setupSimpleExchange, setupAssets } from './tools/setup.js';
 
 test.beforeEach(async (t) => {
-  const { zoe } = await setUpZoeForTest(() => { });
+  const { zoe } = await setUpZoeForTest(() => {});
   const assets = setupAssets();
 
   const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
@@ -50,11 +50,7 @@ test('make sell offer', async (t) => {
     4n,
   );
 
-  const seat = await E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  const seat = await E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   const offerResult = await E(seat).getOfferResult();
   assertions.assertOfferResult(offerResult, 'Order Added');
@@ -85,17 +81,9 @@ test('make buy offer', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   const invitation = await E(publicFacet).makeInvitation();
-  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
-    assets,
-    3n,
-    4n,
-  );
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(assets, 3n, 4n);
 
-  const seat = await E(zoe).offer(
-    invitation,
-    buyOrderProposal,
-    buyPayment
-  );
+  const seat = await E(zoe).offer(invitation, buyOrderProposal, buyPayment);
 
   const offerResult = await E(seat).getOfferResult();
   assertions.assertOfferResult(offerResult, 'Order Added');
@@ -207,34 +195,18 @@ test('make offer with wrong issuers', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   let invitation = await E(publicFacet).makeInvitation();
-  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "wrongWantIssuer"
-  );
+  let { sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'wrongWantIssuer');
 
-  let seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "wrongGiveIssuer"
-  ));
+  ({ sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'wrongGiveIssuer'));
 
-  seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
 });
@@ -259,32 +231,16 @@ test('make offer with offerProposal missing attribute', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   let invitation = await E(publicFacet).makeInvitation();
-  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "missingWant"
-  );
-  let seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  let { sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'missingWant');
+  let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "missingGive"
-  ));
-  seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  ({ sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'missingGive'));
+  seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
 });
@@ -309,13 +265,12 @@ test('make offer without offerProposal', async (t) => {
 
   const invitation = await E(publicFacet).makeInvitation();
 
-  const seatPromise = E(zoe).offer(
-    invitation,
-    undefined,
-    undefined,
-  );
+  const seatPromise = E(zoe).offer(invitation, undefined, undefined);
 
-  await assertions.assertThrowError(seatPromise, '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]');
+  await assertions.assertThrowError(
+    seatPromise,
+    '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
+  );
 });
 
 test('offers with null or invalid shapes on the proposals', async (t) => {
@@ -341,19 +296,21 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
     assets,
     3n,
     4n,
-    "invalidShapes"
-  )
+    'invalidShapes',
+  );
 
-  const promises = invalidShapes.map(async ({ sellOrderProposal, sellPayment, expectedError }) => {
-    const invitation = await E(publicFacet).makeInvitation();
-    const seatPromise = E(zoe).offer(
-      invitation,
-      sellOrderProposal,
-      sellPayment,
-    );
+  const promises = invalidShapes.map(
+    async ({ sellOrderProposal, sellPayment, expectedError }) => {
+      const invitation = await E(publicFacet).makeInvitation();
+      const seatPromise = E(zoe).offer(
+        invitation,
+        sellOrderProposal,
+        sellPayment,
+      );
 
-    await assertions.assertThrowError(seatPromise, expectedError);
-  });
+      await assertions.assertThrowError(seatPromise, expectedError);
+    },
+  );
 
   await Promise.all(promises);
 });
@@ -366,8 +323,11 @@ test('make offer with NFT', async (t) => {
   const helpers = makeSimpleExchangeHelpers();
 
   // Make NFT kit
-  const moolaKit = makeIssuerKit("Moola", AssetKind.SET);
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, { moolaKit, simoleanKit });
+  const moolaKit = makeIssuerKit('Moola', AssetKind.SET);
+  const { publicFacet, instance } = await setupSimpleExchange(zoe, {
+    moolaKit,
+    simoleanKit,
+  });
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -380,15 +340,15 @@ test('make offer with NFT', async (t) => {
   let expectedSells = [];
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  const moolaAttributes = { name: "Moola", description: "A set of moola" };
-  const simoleanAmount = 4n;
+  const moolaValue = harden([{ name: 'Moola', description: 'A set of moola' }]);
+  const simoleanValue = 4n;
 
   // Alice makes a sell offer
   const aliceInvitation = await E(publicFacet).makeInvitation();
-  const { sellOrderProposal, sellPayment } = helpers.makeSellOfferNFT(
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
     { moolaKit, simoleanKit },
-    moolaAttributes,
-    simoleanAmount,
+    moolaValue,
+    simoleanValue,
   );
 
   const aliceSeat = await E(zoe).offer(
@@ -407,10 +367,10 @@ test('make offer with NFT', async (t) => {
 
   // Bob makes a buy offer
   const bobInvitation = await E(publicFacet).makeInvitation();
-  const { buyOrderProposal, buyPayment } = helpers.makeBuyOfferNFT(
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
     { moolaKit, simoleanKit },
-    moolaAttributes,
-    simoleanAmount,
+    moolaValue,
+    simoleanValue,
   );
 
   const bobSeat = await E(zoe).offer(
@@ -435,6 +395,6 @@ test('make offer with NFT', async (t) => {
   const amountMoola = await E(moolaKit.issuer).getAmountOf(bobPayout);
   const amountSimolean = await E(simoleanKit.issuer).getAmountOf(alicePayout);
 
-  assertions.assertPayoutAmount(amountMoola.value, [moolaAttributes]);
-  assertions.assertPayoutAmount(amountSimolean.value, simoleanAmount);
+  assertions.assertPayoutAmount(amountMoola.value, moolaValue);
+  assertions.assertPayoutAmount(amountSimolean.value, simoleanValue);
 });
