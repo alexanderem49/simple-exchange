@@ -11,6 +11,16 @@ const modulePath = async (sourceRoot) => {
   return new URL(url).pathname;
 };
 
+const run = async (c, name, args = []) => {
+  assert(Array.isArray(args));
+
+  const kpid = c.queueToVatRoot('bootstrap', name, args);
+  await c.run();
+  const status = c.kpStatus(kpid);
+  const capdata = c.kpResolution(kpid);
+  return [status, capdata];
+};
+
 test.beforeEach(async (t) => {
   /** @type {SwingSetConfig} */
   const config = {
@@ -61,11 +71,72 @@ test('initial', async (t) => {
   t.pass('This is a dummy test');
 });
 
-test.only('crabble-null-upgrade', async (t) => {
+test('null-upgrade', async (t) => {
   const { controller } = t.context;
 
   t.log('run controller');
   await controller.run();
 
-  t.pass();
+  const [upgrade] = await run(controller, 'upgrade', ['simple_exchange_v1']);
+  t.is(upgrade, 'fulfilled');
+});
+
+test('null-upgrade-orderBook', async (t) => {
+  const { controller } = t.context;
+
+  t.log('run controller');
+  await controller.run();
+
+  const [assertOrderBook] = await run(controller, 'assertOrderBook', [[], []]);
+  t.is(assertOrderBook, 'fulfilled');
+
+  const [addSellOffer] = await run(controller, 'addSellOffer', []);
+  t.is(addSellOffer, 'fulfilled');
+
+  let [assertOrderBookLength] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 1],
+  );
+  t.is(assertOrderBookLength, 'fulfilled');
+
+  const [upgrade] = await run(controller, 'upgrade', ['simple_exchange_v1']);
+  t.is(upgrade, 'fulfilled');
+
+  [assertOrderBookLength] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 1],
+  );
+  t.is(assertOrderBookLength, 'fulfilled');
+});
+
+test.only('null-upgrade-trade', async (t) => {
+  const { controller } = t.context;
+
+  t.log('run controller');
+  await controller.run();
+
+  const [addSellOffer] = await run(controller, 'addSellOffer', []);
+  t.is(addSellOffer, 'fulfilled');
+
+  const [upgrade] = await run(controller, 'upgrade', ['simple_exchange_v1']);
+  t.is(upgrade, 'fulfilled');
+
+  let [assertOrderBookLength] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 1],
+  );
+  t.is(assertOrderBookLength, 'fulfilled');
+
+  const [addBuyOffer] = await run(controller, 'addBuyOffer', []);
+  t.is(addBuyOffer, 'fulfilled');
+
+  let [assertOrderBookLength1] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 0],
+  );
+  t.is(assertOrderBookLength1, 'fulfilled');
 });
