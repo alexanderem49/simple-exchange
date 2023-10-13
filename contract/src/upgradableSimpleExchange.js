@@ -21,12 +21,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
   let buySeats = [];
 
   const mapOrders = (seats) =>
-    seats
-      .filter((s) => !s.hasExited())
-      .map((seat) => ({
-        want: seat.getProposal().want,
-        give: seat.getProposal().give,
-      }));
+    seats.filter((s) => !s.hasExited()).map((seat) => seat.getProposal());
 
   const getBookOrders = () => ({
     buys: mapOrders(buySeats),
@@ -102,7 +97,12 @@ const prepare = async (zcf, privateArgs, baggage) => {
     },
   );
 
-  const creatorFacet = Far('creatorFacet', {});
+  const creatorFacet = prepareExo(
+    baggage,
+    'creatorFacet',
+    M.interface('creatorFacetI', {}),
+    {},
+  );
 
   return harden({ creatorFacet, publicFacet });
 };

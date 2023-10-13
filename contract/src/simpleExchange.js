@@ -16,12 +16,7 @@ const start = (zcf) => {
   let buySeats = [];
 
   const mapOrders = (seats) =>
-    seats
-      .filter((s) => !s.hasExited())
-      .map((seat) => ({
-        want: seat.getProposal().want,
-        give: seat.getProposal().give,
-      }));
+    seats.filter((s) => !s.hasExited()).map((seat) => seat.getProposal());
 
   const getBookOrders = () => ({
     buys: mapOrders(buySeats),
