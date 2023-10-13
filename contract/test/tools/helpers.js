@@ -1,5 +1,4 @@
 import { AmountMath } from '@agoric/ertp';
-import { makeCopySet } from '@agoric/store';
 
 export const makeSimpleExchangeHelpers = () => {
   const makeSellOffer = (assets, moolaValue, simoleansValue) => {
@@ -12,6 +11,7 @@ export const makeSimpleExchangeHelpers = () => {
     const sellOrderProposal = harden({
       give: { Asset: moolaAmount },
       want: { Price: simoleanAmount },
+      exit: { onDemand: null },
     });
 
     const moolaPayment = assets.moolaKit.mint.mintPayment(moolaAmount);
@@ -20,26 +20,8 @@ export const makeSimpleExchangeHelpers = () => {
     return harden({ sellOrderProposal, sellPayment });
   };
 
-  const makeSellOfferNFT = (assets, moolaAttributes, simoleansValue) => {
-    const moolaAmount = AmountMath.make(assets.moolaKit.brand, harden([moolaAttributes]));
-    const simoleanAmount = AmountMath.make(
-      assets.simoleanKit.brand,
-      simoleansValue,
-    );
-
-    const sellOrderProposal = harden({
-      give: { Asset: moolaAmount },
-      want: { Price: simoleanAmount },
-    });
-
-    const moolaPayment = assets.moolaKit.mint.mintPayment(moolaAmount);
-    const sellPayment = { Asset: moolaPayment };
-
-    return harden({ sellOrderProposal, sellPayment });
-  };
-
-  const makeBuyOfferNFT = (assets, moolaAttributes, simoleansValue) => {
-    const moolaAmount = AmountMath.make(assets.moolaKit.brand, harden([moolaAttributes]));
+  const makeBuyOffer = (assets, moolaValue, simoleansValue) => {
+    const moolaAmount = AmountMath.make(assets.moolaKit.brand, moolaValue);
     const simoleanAmount = AmountMath.make(
       assets.simoleanKit.brand,
       simoleansValue,
@@ -48,6 +30,7 @@ export const makeSimpleExchangeHelpers = () => {
     const buyOrderProposal = harden({
       give: { Price: simoleanAmount },
       want: { Asset: moolaAmount },
+      exit: { onDemand: null },
     });
 
     const simoleanPayment = assets.simoleanKit.mint.mintPayment(simoleanAmount);
@@ -56,7 +39,12 @@ export const makeSimpleExchangeHelpers = () => {
     return harden({ buyOrderProposal, buyPayment });
   };
 
-  const makeInvalidSellOffer = (assets, moolaValue, simoleanValue, invalidOfferType) => {
+  const makeInvalidSellOffer = (
+    assets,
+    moolaValue,
+    simoleanValue,
+    invalidOfferType,
+  ) => {
     const wrongIssuer = (want) => {
       const moolaAmount = AmountMath.make(assets.moolaKit.brand, moolaValue);
       const simoleanAmount = AmountMath.make(
@@ -68,7 +56,8 @@ export const makeSimpleExchangeHelpers = () => {
         simoleanValue,
       );
 
-      const expectedError = 'key "[Alleged: Nothing brand]" not found in collection "brandToIssuerRecord"';
+      const expectedError =
+        'key "[Alleged: Nothing brand]" not found in collection "brandToIssuerRecord"';
 
       if (want) {
         const sellOrderProposal = harden({
@@ -80,19 +69,19 @@ export const makeSimpleExchangeHelpers = () => {
         const sellPayment = { Asset: moolaPayment };
 
         return harden({ sellOrderProposal, sellPayment, expectedError });
-      }
-      else {
+      } else {
         const sellOrderProposal = harden({
           give: { Asset: nothingAmount },
           want: { Price: simoleanAmount },
         });
 
-        const nothingPayment = assets.nothingKit.mint.mintPayment(nothingAmount);
+        const nothingPayment =
+          assets.nothingKit.mint.mintPayment(nothingAmount);
         const sellPayment = { Asset: nothingPayment };
 
         return harden({ sellOrderProposal, sellPayment, expectedError });
       }
-    }
+    };
 
     const missingWantOrGive = (want) => {
       const moolaAmount = AmountMath.make(assets.moolaKit.brand, moolaValue);
@@ -101,21 +90,23 @@ export const makeSimpleExchangeHelpers = () => {
         simoleanValue,
       );
 
-      const sellOrderProposal = want ? harden({
-        give: { Asset: moolaAmount },
-      }) : harden({
-        want: { Price: simoleanAmount },
-      });
+      const sellOrderProposal = want
+        ? harden({
+            give: { Asset: moolaAmount },
+          })
+        : harden({
+            want: { Price: simoleanAmount },
+          });
 
       const moolaPayment = assets.moolaKit.mint.mintPayment(moolaAmount);
       const sellPayment = { Asset: moolaPayment };
 
-      const expectedError = want ?
-        '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]' :
-        '"exchange" proposal: give: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]'
+      const expectedError = want
+        ? '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]'
+        : '"exchange" proposal: give: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]';
 
       return harden({ sellOrderProposal, sellPayment, expectedError });
-    }
+    };
 
     const invalidShapes = () => {
       const moolaAmount = AmountMath.make(assets.moolaKit.brand, moolaValue);
@@ -226,9 +217,13 @@ export const makeSimpleExchangeHelpers = () => {
         const moolaPayment = assets.moolaKit.mint.mintPayment(moolaAmount);
         const sellPayment = { Asset: moolaPayment };
 
-        return harden({ sellOrderProposal: proposal, sellPayment, expectedError: errorMessage });
+        return harden({
+          sellOrderProposal: proposal,
+          sellPayment,
+          expectedError: errorMessage,
+        });
       });
-    }
+    };
 
     switch (invalidOfferType) {
       case 'wrongWantIssuer':
@@ -251,23 +246,5 @@ export const makeSimpleExchangeHelpers = () => {
     }
   };
 
-  const makeBuyOffer = (assets, moolaValue, simoleansValue) => {
-    const moolaAmount = AmountMath.make(assets.moolaKit.brand, moolaValue);
-    const simoleanAmount = AmountMath.make(
-      assets.simoleanKit.brand,
-      simoleansValue,
-    );
-
-    const buyOrderProposal = harden({
-      give: { Price: simoleanAmount },
-      want: { Asset: moolaAmount },
-    });
-
-    const simoleanPayment = assets.simoleanKit.mint.mintPayment(simoleanAmount);
-    const buyPayment = { Price: simoleanPayment };
-
-    return harden({ buyOrderProposal, buyPayment });
-  };
-
-  return harden({ makeSellOffer, makeSellOfferNFT, makeInvalidSellOffer, makeBuyOffer, makeBuyOfferNFT });
+  return harden({ makeSellOffer, makeInvalidSellOffer, makeBuyOffer });
 };
