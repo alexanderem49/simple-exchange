@@ -60,3 +60,12 @@ test('initial', async (t) => {
   });
   t.pass('This is a dummy test');
 });
+
+test.only('crabble-null-upgrade', async (t) => {
+  const { controller } = t.context;
+
+  t.log('run controller');
+  await controller.run();
+
+  t.pass();
+});
