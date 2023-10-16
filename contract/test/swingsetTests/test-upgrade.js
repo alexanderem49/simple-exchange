@@ -90,10 +90,17 @@ test('null-upgrade-orderBook', async (t) => {
   const [assertOrderBook] = await run(controller, 'assertOrderBook', [[], []]);
   t.is(assertOrderBook, 'fulfilled');
 
-  const [addSellOffer] = await run(controller, 'addSellOffer', []);
+  let [assertOrderBookLength] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 0],
+  );
+  t.is(assertOrderBookLength, 'fulfilled');
+
+  let [addSellOffer] = await run(controller, 'addSellOffer', []);
   t.is(addSellOffer, 'fulfilled');
 
-  let [assertOrderBookLength] = await run(
+  [assertOrderBookLength] = await run(
     controller,
     'assertOrderBookLength',
     [0, 1],
@@ -109,9 +116,19 @@ test('null-upgrade-orderBook', async (t) => {
     [0, 1],
   );
   t.is(assertOrderBookLength, 'fulfilled');
+
+  [addSellOffer] = await run(controller, 'addSellOffer', []);
+  t.is(addSellOffer, 'fulfilled');
+
+  [assertOrderBookLength] = await run(
+    controller,
+    'assertOrderBookLength',
+    [0, 2],
+  );
+  t.is(assertOrderBookLength, 'fulfilled');
 });
 
-test.only('null-upgrade-trade', async (t) => {
+test('null-upgrade-exchange', async (t) => {
   const { controller } = t.context;
 
   t.log('run controller');
