@@ -15,21 +15,16 @@ const start = (zcf) => {
   let sellSeats = [];
   let buySeats = [];
 
-  const mapOrders = (seats) =>
-    seats
-      .filter((s) => !s.hasExited())
-      .map((seat) => ({
-        want: seat.getProposal().want,
-        give: seat.getProposal().give,
-      }));
+  const getOffers = (seats) =>
+    seats.filter((s) => !s.hasExited()).map((seat) => seat.getProposal());
 
-  const getBookOrders = () => ({
-    buys: mapOrders(buySeats),
-    sells: mapOrders(sellSeats),
+  const getOrderBook = () => ({
+    buys: getOffers(buySeats),
+    sells: getOffers(sellSeats),
   });
 
-  const { notifier, updater } = makeNotifierKit(getBookOrders());
-  const bookOrdersChanged = () => updater.updateState(getBookOrders());
+  const { notifier, updater } = makeNotifierKit(getOrderBook());
+  const updateOrderBook = () => updater.updateState(getOrderBook());
 
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
@@ -51,7 +46,7 @@ const start = (zcf) => {
     } else {
       coOffers.push(seat);
     }
-    bookOrdersChanged();
+    updateOrderBook();
     return counterOffers;
   };
 
