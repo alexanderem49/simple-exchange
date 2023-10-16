@@ -29,7 +29,10 @@ test('make sell offer', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -49,11 +52,7 @@ test('make sell offer', async (t) => {
     4n,
   );
 
-  const seat = await E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  const seat = await E(zoe).offer(invitation, sellOrderProposal, sellPayment);
   await eventLoopIteration();
 
   const offerResult = await E(seat).getOfferResult();
@@ -71,7 +70,10 @@ test('make buy offer', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -85,17 +87,9 @@ test('make buy offer', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   const invitation = await E(publicFacet).makeInvitation();
-  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
-    assets,
-    3n,
-    4n,
-  );
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(assets, 3n, 4n);
 
-  const seat = await E(zoe).offer(
-    invitation,
-    buyOrderProposal,
-    buyPayment
-  );
+  const seat = await E(zoe).offer(invitation, buyOrderProposal, buyPayment);
   await eventLoopIteration();
 
   const offerResult = await E(seat).getOfferResult();
@@ -113,7 +107,10 @@ test('make trade', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -193,7 +190,10 @@ test('make offer with wrong issuers', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -210,35 +210,23 @@ test('make offer with wrong issuers', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   let invitation = await E(publicFacet).makeInvitation();
-  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "wrongWantIssuer"
-  );
+  let { sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'wrongWantIssuer');
 
-  let seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
   await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidOffer(
     assets,
     3n,
     4n,
-    "wrongGiveIssuer"
+    'wrongGiveIssuer',
   ));
 
-  seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
   await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
@@ -250,7 +238,10 @@ test('make offer with offerProposal missing attribute', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -264,33 +255,21 @@ test('make offer with offerProposal missing attribute', async (t) => {
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   let invitation = await E(publicFacet).makeInvitation();
-  let { sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
-    assets,
-    3n,
-    4n,
-    "missingWant"
-  );
-  let seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  let { sellOrderProposal, sellPayment, expectedError } =
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'missingWant');
+  let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
   await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidSellOffer(
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidOffer(
     assets,
     3n,
     4n,
-    "missingGive"
+    'missingGive',
   ));
-  seatPromise = E(zoe).offer(
-    invitation,
-    sellOrderProposal,
-    sellPayment,
-  );
+  seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
   await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
@@ -301,7 +280,10 @@ test('make offer without offerProposal', async (t) => {
   const { moolaKit, simoleanKit } = assets;
   const assertions = makeSimpleExchangeAssertions(t);
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -316,14 +298,13 @@ test('make offer without offerProposal', async (t) => {
 
   const invitation = await E(publicFacet).makeInvitation();
 
-  const seatPromise = E(zoe).offer(
-    invitation,
-    undefined,
-    undefined,
-  );
+  const seatPromise = E(zoe).offer(invitation, undefined, undefined);
   await eventLoopIteration();
 
-  await assertions.assertThrowError(seatPromise, '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]');
+  await assertions.assertThrowError(
+    seatPromise,
+    '"exchange" proposal: want: {} - Must match one of [{"Asset":{"brand":"[match:remotable]","value":"[match:or]"}},{"Price":{"brand":"[match:remotable]","value":"[match:or]"}}]',
+  );
 });
 
 test('offers with null or invalid shapes on the proposals', async (t) => {
@@ -332,7 +313,10 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -345,24 +329,26 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   let expectedSells = [];
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  const invalidShapes = helpers.makeInvalidSellOffer(
+  const invalidShapes = helpers.makeInvalidOffer(
     assets,
     3n,
     4n,
-    "invalidShapes"
-  )
+    'invalidShapes',
+  );
 
-  const promises = invalidShapes.map(async ({ sellOrderProposal, sellPayment, expectedError }) => {
-    const invitation = await E(publicFacet).makeInvitation();
-    const seatPromise = E(zoe).offer(
-      invitation,
-      sellOrderProposal,
-      sellPayment,
-    );
-    await eventLoopIteration();
+  const promises = invalidShapes.map(
+    async ({ sellOrderProposal, sellPayment, expectedError }) => {
+      const invitation = await E(publicFacet).makeInvitation();
+      const seatPromise = E(zoe).offer(
+        invitation,
+        sellOrderProposal,
+        sellPayment,
+      );
+      await eventLoopIteration();
 
-    await assertions.assertThrowError(seatPromise, expectedError);
-  });
+      await assertions.assertThrowError(seatPromise, expectedError);
+    },
+  );
 
   await Promise.all(promises);
 });
@@ -376,7 +362,10 @@ test('make offer with NFT', async (t) => {
 
   // Make NFT kit
   const moolaKit = makeIssuerKit('Moola', AssetKind.SET);
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, { moolaKit, simoleanKit });
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, {
+    moolaKit,
+    simoleanKit,
+  });
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);

@@ -39,7 +39,7 @@ export const makeSimpleExchangeHelpers = () => {
     return harden({ buyOrderProposal, buyPayment });
   };
 
-  const makeInvalidSellOffer = (
+  const makeInvalidOffer = (
     assets,
     moolaValue,
     simoleanValue,
@@ -246,5 +246,5 @@ export const makeSimpleExchangeHelpers = () => {
     }
   };
 
-  return harden({ makeSellOffer, makeInvalidSellOffer, makeBuyOffer });
+  return harden({ makeSellOffer, makeInvalidOffer, makeBuyOffer });
 };

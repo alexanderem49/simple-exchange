@@ -196,7 +196,7 @@ test('make offer with wrong issuers', async (t) => {
 
   let invitation = await E(publicFacet).makeInvitation();
   let { sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'wrongWantIssuer');
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'wrongWantIssuer');
 
   let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
@@ -204,7 +204,7 @@ test('make offer with wrong issuers', async (t) => {
 
   invitation = await E(publicFacet).makeInvitation();
   ({ sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'wrongGiveIssuer'));
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'wrongGiveIssuer'));
 
   seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
@@ -232,14 +232,14 @@ test('make offer with offerProposal missing attribute', async (t) => {
 
   let invitation = await E(publicFacet).makeInvitation();
   let { sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'missingWant');
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'missingWant');
   let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
   ({ sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidSellOffer(assets, 3n, 4n, 'missingGive'));
+    helpers.makeInvalidOffer(assets, 3n, 4n, 'missingGive'));
   seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
 
   await assertions.assertThrowError(seatPromise, expectedError);
@@ -292,7 +292,7 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   let expectedSells = [];
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
-  const invalidShapes = helpers.makeInvalidSellOffer(
+  const invalidShapes = helpers.makeInvalidOffer(
     assets,
     3n,
     4n,
