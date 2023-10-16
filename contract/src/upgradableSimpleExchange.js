@@ -1,6 +1,6 @@
-import { Far } from '@endo/marshal';
 import { AmountShape } from '@agoric/ertp';
-import { prepareExo, M } from '@agoric/vat-data';
+import { prepareExo, M, makeScalarBigMapStore } from '@agoric/vat-data';
+import { provideAll } from '@agoric/zoe/src/contractSupport';
 import {
   assertIssuerKeywords,
   SubscriberShape,
@@ -14,55 +14,77 @@ const prepare = async (zcf, privateArgs, baggage) => {
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
 
   const { makeRecorderKit } = prepareRecorderKitMakers(baggage, marshaller);
-  const { subscriber, recorder } = makeRecorderKit(storageNode);
-  // ToDo: decide if I should use provideAll() for the makeRecorderKit???
-
-  let sellSeats = [];
-  let buySeats = [];
-
-  const mapOrders = (seats) =>
-    seats.filter((s) => !s.hasExited()).map((seat) => seat.getProposal());
-
-  const getBookOrders = () => ({
-    buys: mapOrders(buySeats),
-    sells: mapOrders(sellSeats),
+  const {
+    recorderKit: { subscriber, recorder },
+  } = await provideAll(baggage, {
+    recorderKit: () => makeRecorderKit(storageNode),
   });
 
-  const bookOrdersChanged = () => recorder.write(getBookOrders());
-  bookOrdersChanged();
+  const buildDurableStorage = (keyword) => {
+    let map;
+    if (!baggage.has(keyword)) {
+      map = makeScalarBigMapStore(keyword, { durable: true });
+      baggage.init(keyword, map);
+    } else {
+      map = baggage.get(keyword);
+    }
+    return map;
+  };
+
+  const sellSeatsMap = buildDurableStorage('sellSeats');
+  const buySeatsMap = buildDurableStorage('buySeats');
+
+  const getOffers = (seatsMap) => {
+    let offerList = [];
+    for (const [seat, offer] of seatsMap.entries()) {
+      if (seat.hasExited()) {
+        seatsMap.delete(seat);
+      } else {
+        offerList.push(offer);
+      }
+    }
+    return offerList;
+  };
+
+  const getOrderBook = () => ({
+    buys: getOffers(buySeatsMap),
+    sells: getOffers(sellSeatsMap),
+  });
+
+  const updateOrderBook = () => recorder.write(getOrderBook());
+  updateOrderBook();
 
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
 
-  const swapIfCanTrade = (offers, seat) => {
-    for (const offer of offers) {
-      if (satisfiedBy(offer, seat) && satisfiedBy(seat, offer)) {
-        swap(zcf, seat, offer);
-        return offer;
+  const swapIfCanTrade = (seatsMap, userSeat) => {
+    for (const seat of seatsMap.keys()) {
+      if (satisfiedBy(seat, userSeat) && satisfiedBy(userSeat, seat)) {
+        swap(zcf, userSeat, seat);
+        return seat;
       }
     }
     return undefined;
   };
 
-  const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, seat) => {
-    const offer = swapIfCanTrade(counterOffers, seat);
-    if (offer) {
-      counterOffers = counterOffers.filter((value) => value !== offer);
+  const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, userSeat) => {
+    const seat = swapIfCanTrade(counterOffers, userSeat);
+    if (seat) {
+      counterOffers = counterOffers.delete(seat);
     } else {
-      coOffers.push(seat);
+      coOffers.init(userSeat, userSeat.getProposal());
     }
-    bookOrdersChanged();
-    return counterOffers;
+    updateOrderBook();
   };
 
   const exchangeOfferHandler = (seat) => {
     const { want, give } = seat.getProposal();
 
     if (want.Asset) {
-      sellSeats = swapIfCanTradeAndUpdateBook(sellSeats, buySeats, seat);
+      swapIfCanTradeAndUpdateBook(sellSeatsMap, buySeatsMap, seat);
       return 'Order Added';
     } else if (give.Asset) {
-      buySeats = swapIfCanTradeAndUpdateBook(buySeats, sellSeats, seat);
+      swapIfCanTradeAndUpdateBook(buySeatsMap, sellSeatsMap, seat);
       return 'Order Added';
     } else {
       seat.exit();
