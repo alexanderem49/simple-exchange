@@ -1,19 +1,7 @@
-import { useState } from 'react';
-// TODO: Uncomment after installing @agoric/ui-kit
-// import { parseAsAmount, stringifyValue } from '@agoric/ui-kit';
+import { useEffect, useState } from 'react';
+import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
-
-// TODO: Placeholder for parseAsAmount - remove this after installing @agoric/ui-kit
-const parseAsAmount = (str, brand, assetKind, decimalPlaces) => {
-  // Placeholder implementation
-  return { brand, value: str };
-};
-
-// TODO: Placeholder for stringifyValue - remove this after installing @agoric/ui-kit
-const stringifyValue = (value, assetKind, decimalPlaces) => {
-  // Placeholder implementation
-  return value.toString();
-};
+import { mockBrands } from '../utils/mockData.js';
 
 export default function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -26,25 +14,21 @@ export default function ExchangeInterface() {
 
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
-  const parseUserInput = (brand, ev) => {
-    const { getDisplayInfo } = useStore.getState();
+  const parseUserInput = (brand, str) => {
     const displayInfo = getDisplayInfo(brand);
 
-    // TODO: Handle this case appropriately
-    if (!displayInfo) return;
+    if (!displayInfo) return '';
 
     const { assetKind, decimalPlaces } = displayInfo;
-    const str = ev.target.value.replace('-', '').replace('e', '').replace('E', '');
-
     const parsed = parseAsAmount(str, brand, assetKind, decimalPlaces);
-    // TODO: Adjust as needed
     return parsed.value;
   };
 
   const displayAmount = (amount) => {
-    // TODO: Adjust this line as needed
+    if (!amount || !amount.brand || !amount.value) return '';
+
     const { brand, value } = amount;
-    const displayInfo = getDisplayInfo(brand);
+    const displayInfo = getDisplayInfo(brand) || mockBrands[brand];
 
     if (!displayInfo) return '';
 
@@ -53,21 +37,27 @@ export default function ExchangeInterface() {
   };
 
   const handleInputChange = (ev) => {
+    const str = ev.target.value.replace('-', '').replace('e', '').replace('E', '');
     // Assuming firstValue is a brand
-    const parsedValue = parseUserInput(firstValue, ev);
-    // TODO: Adjust this line as needed
+    const parsedValue = parseUserInput(firstValue, str);
     setInputValue(parsedValue);
   };
 
   const handleOutputChange = (ev) => {
+    const str = ev.target.value.replace('-', '').replace('e', '').replace('E', '');
     // Assuming secondValue is a brand
-    const parsedValue = parseUserInput(secondValue, ev);
-    // TODO: Adjust this line as needed
+    const parsedValue = parseUserInput(secondValue, str);
     setOutputValue(parsedValue);
   };
 
+  useEffect(() => {
+    setInputValue(displayAmount(firstValue, inputValue));
+    setOutputValue(displayAmount(secondValue, outputValue));
+  }, [firstValue, secondValue, inputValue, outputValue]);
+
   const handleExchange = () => {
     // TODO: Handling the exchange logic here
+    console.log('Akuna Matata: ');
   };
 
   const handleArrowClick = () => {
@@ -88,8 +78,8 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={displayAmount(firstValue, inputValue)}
+          onChange={handleInputChange}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder={firstLabel.includes('Asset:') ? firstValue : '0.00'}
         />

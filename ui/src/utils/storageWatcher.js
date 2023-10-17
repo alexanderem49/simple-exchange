@@ -1,70 +1,47 @@
-import { useStore } from '../store/store.js';
-import { AgoricChainStoragePathKind } from '@agoric/rpc';
-import { subscribeLatest } from '@agoric/notifier';
+// import { useEffect } from 'react';
+// import { useStore } from '../store/store';
+// import { AgoricChainStoragePathKind, makeAgoricChainStorageWatcher } from '@agoric/rpc';
+//
+// export const useStorageWatcher = () => {
+//   const setWatcher = useStore((state) => state.setWatcher);
+//   const setExchangeAssets = useStore((state) => state.setExchangeAssets);
+//   const watcher = useStore((state) => state.watcher);
+//
+//   useEffect(() => {
+//     if (!watcher) {
+//       const newWatcher = makeAgoricChainStorageWatcher('http://localhost:26657', 'agoriclocal');
+//       setWatcher(newWatcher);
+//
+//       newWatcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.agoricNames.vbankAsset'], (vbankAssets) => {
+//         console.log('VBankAsset Update', vbankAssets);
+//         if (vbankAssets) {
+//           const updatedAssets = vbankAssets.map((asset) => ({
+//             brand: asset[1]?.brand,
+//             displayInfo: asset[1]?.displayInfo
+//           }));
+//           setExchangeAssets(updatedAssets);
+//         }
+//       });
+//     }
+//   }, [watcher, setWatcher, setExchangeAssets]);
+// };
 
-const makeStorageWatcher = () => {
-  const { watcher, wallet, registerRentals, updateBrands, updateVBank } = useStore.getState();
+import { useEffect } from 'react';
+import { vbankAssets } from './mockData';
 
-  const watchSmartWallet = () => {
-    watcher.watchLatest(
-      [AgoricChainStoragePathKind.Data, `published.wallet.${wallet.address}.current`],
-      (smartWalletData) => {
-        console.log('SmartWallet Update', smartWalletData);
-        registerRentals(smartWalletData.offerToPublicSubscriberPaths);
-        useStore.setState({
-          smartWalletPurses: smartWalletData.purses
-        });
-      },
-      (log) => {
-        console.log('ERROR: Watching smart wallet purses', log);
+export const useStorageWatcher = (setExchangeAssets) => {
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log('VBankAsset Update', vbankAssets);
+      if (vbankAssets) {
+        const updatedAssets = vbankAssets.map((asset) => ({
+          brand: asset[1]?.brand,
+          displayInfo: asset[1]?.displayInfo
+        }));
+        setExchangeAssets(updatedAssets);
       }
-    );
-  };
+    }, 2000);
 
-  const watchVBankPurses = async () => {
-    for await (const purses of subscribeLatest(wallet.pursesNotifier)) {
-      console.log('VBANK Purse Update', purses);
-      updateVBank(purses);
-    }
-  };
-
-  const watchBrands = () => {
-    watcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.agoricNames.brand'], (brands) => {
-      console.log('Brand Update', brands);
-      updateBrands(brands);
-    });
-  };
-
-  const watchInstances = () => {
-    watcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.agoricNames.instance'], (instances) => {
-      console.log('Instance Update', instances);
-      useStore.setState({
-        crabbleInstance: instances.find(([name]) => name === 'Crabble')?.at(1)
-      });
-    });
-  };
-
-  const watchCatalog = () => {
-    watcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.crabble.Catalog'], (catalog) => {
-      console.log('Catalog Update', catalog);
-      useStore.setState({ catalog });
-    });
-  };
-
-  const startWatching = () => {
-    if (!watcher) return;
-
-    if (wallet) {
-      watchSmartWallet();
-      watchVBankPurses().catch((err) => console.log('ERROR', err));
-    }
-
-    watchBrands();
-    watchInstances();
-    watchCatalog();
-  };
-
-  return { startWatching };
+    return () => clearTimeout(timeout);
+  }, [setExchangeAssets]);
 };
-
-export { makeStorageWatcher };
