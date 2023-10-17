@@ -72,7 +72,7 @@ function Trade() {
           </div>
         </div>
       </div>
-      <div className="w-1/3 pl-4 flex items-center justify-center">
+      <div className="w-1/3 pl-4 flex items-center justify-center mt-20">
         <ExchangeInterface />
       </div>
     </div>

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@agoric/rpc": "^0.6.0",
+    "@agoric/ui-components": "0.9.0",
     "@headlessui/react": "1.7.17",
     "@heroicons/react": "^2.0.18",
     "autoprefixer": "10.4.8",
@@ -17,6 +19,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "6.15.0",
+    "ses": "0.18.8",
     "tailwindcss": "3.1.8",
     "zustand": "4.4.1"
   },

@@ -5,7 +5,11 @@ module.exports = {
     extend: {
       minWidth: {
         '125': '125px'
-      }
+      },
+      spacing: {
+        '25': '6.25rem',
+        '28': '7rem',
+      },
     },
   },
   plugins: [],
