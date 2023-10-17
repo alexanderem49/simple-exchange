@@ -1,5 +1,10 @@
 import { AmountShape } from '@agoric/ertp';
-import { prepareExo, M, makeScalarBigMapStore } from '@agoric/vat-data';
+import {
+  prepareExo,
+  M,
+  makeScalarBigMapStore,
+  provide,
+} from '@agoric/vat-data';
 import { provideAll } from '@agoric/zoe/src/contractSupport';
 import {
   assertIssuerKeywords,
@@ -20,19 +25,12 @@ const prepare = async (zcf, privateArgs, baggage) => {
     recorderKit: () => makeRecorderKit(storageNode),
   });
 
-  const buildDurableStorage = (keyword) => {
-    let map;
-    if (!baggage.has(keyword)) {
-      map = makeScalarBigMapStore(keyword, { durable: true });
-      baggage.init(keyword, map);
-    } else {
-      map = baggage.get(keyword);
-    }
-    return map;
-  };
-
-  const sellSeatsMap = buildDurableStorage('sellSeats');
-  const buySeatsMap = buildDurableStorage('buySeats');
+  const sellSeatsMap = provide(baggage, 'sellSeats', () =>
+    makeScalarBigMapStore('sellSeats', { durable: true }),
+  );
+  const buySeatsMap = provide(baggage, 'buySeats', () =>
+    makeScalarBigMapStore('buySeats', { durable: true }),
+  );
 
   const getOffers = (seatsMap) => {
     let offerList = [];
