@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
-import { mockBrands } from '../utils/mockData.js';
+import { XCircleIcon } from '@heroicons/react/24/outline/index.js';
 
 export default function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -11,54 +11,61 @@ export default function ExchangeInterface() {
   const [firstValue, setFirstValue] = useState('ATOM');
   const [secondValue, setSecondValue] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+
+  const vbankAssets = useStore((state) => state.vbankAssets);
+
+  const closeNotification = () => {
+    setShowNotification(false);
+  };
+
+  useEffect(() => {
+    if (vbankAssets.length > 0) {
+      console.log('vbankAssets in Exchange:', vbankAssets); // Log to inspect the real data structure
+    }
+  }, [vbankAssets]);
 
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
-  const parseUserInput = (brand, str) => {
+  const displayAmount = (brand, value) => {
     const displayInfo = getDisplayInfo(brand);
 
-    if (!displayInfo) return '';
-
-    const { assetKind, decimalPlaces } = displayInfo;
-    const parsed = parseAsAmount(str, brand, assetKind, decimalPlaces);
-    return parsed.value;
-  };
-
-  const displayAmount = (amount) => {
-    if (!amount || !amount.brand || !amount.value) return '';
-
-    const { brand, value } = amount;
-    const displayInfo = getDisplayInfo(brand) || mockBrands[brand];
-
-    if (!displayInfo) return '';
+    if (!displayInfo) return value;
 
     const { assetKind, decimalPlaces } = displayInfo;
     return stringifyValue(value, assetKind, decimalPlaces);
   };
 
+  const parseUserInput = (brand, str) => {
+    const displayInfo = getDisplayInfo(brand);
+
+    if (!displayInfo) return str;
+
+    const { assetKind, decimalPlaces } = displayInfo;
+    return parseAsAmount(str, brand, assetKind, decimalPlaces).value;
+  };
+
   const handleInputChange = (ev) => {
-    const str = ev.target.value.replace('-', '').replace('e', '').replace('E', '');
-    // Assuming firstValue is a brand
-    const parsedValue = parseUserInput(firstValue, str);
-    setInputValue(parsedValue);
+    setInputValue(ev.target.value);
   };
-
-  const handleOutputChange = (ev) => {
-    const str = ev.target.value.replace('-', '').replace('e', '').replace('E', '');
-    // Assuming secondValue is a brand
-    const parsedValue = parseUserInput(secondValue, str);
-    setOutputValue(parsedValue);
-  };
-
-  useEffect(() => {
-    setInputValue(displayAmount(firstValue, inputValue));
-    setOutputValue(displayAmount(secondValue, outputValue));
-  }, [firstValue, secondValue, inputValue, outputValue]);
 
   const handleExchange = () => {
-    // TODO: Handling the exchange logic here
-    console.log('Akuna Matata: ');
+    const parsedInput = parseUserInput(firstValue, inputValue);
+    const parsedOutput = parseUserInput(secondValue, outputValue);
+
+    // Basic validation
+    if (!parsedInput || !parsedOutput) {
+      console.log('Both fields are required');
+      return;
+    }
+
+    console.log('Parsed Input:', parsedInput, 'Parsed Output:', parsedOutput);
+
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
   };
+
+  useEffect(() => {}, [firstValue, secondValue, inputValue, outputValue]);
 
   const handleArrowClick = () => {
     setIsOpen(!isOpen);
@@ -81,7 +88,7 @@ export default function ExchangeInterface() {
           value={displayAmount(firstValue, inputValue)}
           onChange={handleInputChange}
           className="p-2 w-3/5 border border-gray-300 rounded"
-          placeholder={firstLabel.includes('Asset:') ? firstValue : '0.00'}
+          placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
           {firstLabel} {firstValue}
@@ -114,7 +121,7 @@ export default function ExchangeInterface() {
           value={outputValue}
           onChange={(e) => setOutputValue(e.target.value)}
           className="p-2 w-3/5 border border-gray-300 rounded"
-          placeholder={secondLabel.includes('Asset:') ? secondValue : '0.00'}
+          placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
           {secondLabel} {secondValue}
@@ -123,6 +130,17 @@ export default function ExchangeInterface() {
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">
         Make Order
       </button>
+      {showNotification && (
+        <div className="fixed bottom-3.5 left-3 mb-20 ml-6 p-2 bg-green-500 text-white rounded shadow-lg flex items-center space-x-2 transition-all duration-400 ease-in-out">
+          <span>Order Accepted</span>
+          <button
+            onClick={closeNotification}
+            className="p-1 rounded hover:bg-green-600 transition-colors duration-300 ease-in-out"
+          >
+            <XCircleIcon className="h-5 w-5 text-white" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
