@@ -43,8 +43,10 @@ export const initSimpleExchange = async (powers) => {
 
   const privateArgs = harden({ marshaller, storageNode });
 
+  const installation = await simpleExchangeInstallation;
+  
   const instanceFacets = await E(zoe).startInstance(
-    simpleExchangeInstallation,
+    installation,
     issuerKeywordRecord,
     undefined,
     privateArgs,
