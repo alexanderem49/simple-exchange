@@ -104,7 +104,7 @@ test('test make sell offer', async (t) => {
 
   const currentState = await headValue(currentSub);
   let liveOffers = new Map(currentState.liveOffers);
-
+  console.log(currentState);
   console.log(liveOffers.get('makeSellOffer'));
   t.deepEqual(liveOffers.get('makeSellOffer'), offer);
 });
