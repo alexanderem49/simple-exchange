@@ -8,8 +8,8 @@ export default function ExchangeInterface() {
   const [outputValue, setOutputValue] = useState('');
   const [firstLabel, setFirstLabel] = useState('Asset:');
   const [secondLabel, setSecondLabel] = useState('Price:');
-  const [firstValue, setFirstValue] = useState('ATOM');
-  const [secondValue, setSecondValue] = useState('IST');
+  const [firstValue, setFirstValue] = useState('uist');
+  const [secondValue, setSecondValue] = useState('ubld');
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
 
@@ -21,7 +21,7 @@ export default function ExchangeInterface() {
 
   useEffect(() => {
     if (vbankAssets.length > 0) {
-      console.log('vbankAssets in Exchange:', vbankAssets); // Log to inspect the real data structure
+      console.log('vbankAssets in Exchange:', vbankAssets);
     }
   }, [vbankAssets]);
 
@@ -30,10 +30,11 @@ export default function ExchangeInterface() {
   const displayAmount = (brand, value) => {
     const displayInfo = getDisplayInfo(brand);
 
-    if (!displayInfo) return value;
+    if (!displayInfo || !value) return '';
 
     const { assetKind, decimalPlaces } = displayInfo;
-    return stringifyValue(value, assetKind, decimalPlaces);
+    const parsedValue = parseAsAmount(value, brand, assetKind, decimalPlaces).value;
+    return stringifyValue(parsedValue, assetKind, decimalPlaces);
   };
 
   const parseUserInput = (brand, str) => {
@@ -42,30 +43,43 @@ export default function ExchangeInterface() {
     if (!displayInfo) return str;
 
     const { assetKind, decimalPlaces } = displayInfo;
+    console.log('displayInfo: ', displayInfo);
     return parseAsAmount(str, brand, assetKind, decimalPlaces).value;
   };
 
   const handleInputChange = (ev) => {
-    setInputValue(ev.target.value);
+    const value = ev.target.value;
+    setInputValue(value);
   };
 
   const handleExchange = () => {
     const parsedInput = parseUserInput(firstValue, inputValue);
     const parsedOutput = parseUserInput(secondValue, outputValue);
 
-    // Basic validation
+    console.log('Parsed Input:', parsedInput);
+    console.log('Parsed Output:', parsedOutput);
+
     if (!parsedInput || !parsedOutput) {
       console.log('Both fields are required');
       return;
     }
 
-    console.log('Parsed Input:', parsedInput, 'Parsed Output:', parsedOutput);
-
+    // Implement the logic for making the order with parsedInput and parsedOutput
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
 
-  useEffect(() => {}, [firstValue, secondValue, inputValue, outputValue]);
+  const getFormattedInputValue = (brand, rawValue) => {
+    const displayInfo = getDisplayInfo(brand);
+
+    if (!displayInfo || !rawValue) return rawValue;
+
+    const { assetKind, decimalPlaces } = displayInfo;
+    const parsedValue = parseAsAmount(rawValue, brand, assetKind, decimalPlaces).value;
+    console.log('parsedValue: ', parsedValue);
+
+    return stringifyValue(parsedValue, assetKind, decimalPlaces);
+  };
 
   const handleArrowClick = () => {
     setIsOpen(!isOpen);
@@ -85,7 +99,7 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={displayAmount(firstValue, inputValue)}
+          value={getFormattedInputValue(firstValue, inputValue)}
           onChange={handleInputChange}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"

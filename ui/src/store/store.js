@@ -1,11 +1,13 @@
 import create from 'zustand';
 import { makeAgoricChainStorageWatcher } from '@agoric/rpc';
 
-export const useStore = create((set) => ({
+export const useStore = create((set, get) => ({
   watcher: makeAgoricChainStorageWatcher('http://localhost:26657', 'agoriclocal'),
   brands: [],
   brandToKeyword: {},
   keywordToBrand: {},
+  assetBrand: {},
+  priceBrand: {},
   brandToDisplayInfo: {},
   smartWalletPurses: [],
   vbankPurses: [],
@@ -13,15 +15,37 @@ export const useStore = create((set) => ({
   notifierState: { open: false, severity: '', message: '' },
   exchangeAssets: [],
   vbankAssets: [],
-  setExchangeAssets: (assets) => set({ exchangeAssets: assets }),
+  setExchangedBrands: (vbankAssets) => {
+    const assetBrand = {};
+    const priceBrand = {};
+
+    vbankAssets.forEach(([denom, assetInfo]) => {
+      if (denom === 'ubld') {
+        assetBrand[denom] = assetInfo;
+      } else if (denom === 'uist') {
+        priceBrand[denom] = assetInfo;
+      }
+    });
+
+    set({ assetBrand, priceBrand });
+  },
   setVbankAssets: (assets) => set({ vbankAssets: assets }),
   getDisplayInfo: (brand) => {
-    const state = useStore.getState();
-    if (!state.vbankAssets || !Array.isArray(state.vbankAssets)) {
+    const { assetBrand, priceBrand, vbankAssets } = get();
+
+    if (assetBrand[brand]) {
+      return assetBrand[brand].displayInfo;
+    }
+
+    if (priceBrand[brand]) {
+      return priceBrand[brand].displayInfo;
+    }
+
+    if (!vbankAssets || !Array.isArray(vbankAssets)) {
       return null;
     }
 
-    const asset = state.vbankAssets.find((asset) => asset[1]?.issuerName === brand);
+    const asset = vbankAssets.find((asset) => asset[1]?.issuerName === brand);
     return asset ? asset[1]?.displayInfo : null;
   }
 }));
