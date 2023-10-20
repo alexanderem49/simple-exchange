@@ -27,16 +27,6 @@ export default function ExchangeInterface() {
 
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
-  const displayAmount = (brand, value) => {
-    const displayInfo = getDisplayInfo(brand);
-
-    if (!displayInfo || !value) return '';
-
-    const { assetKind, decimalPlaces } = displayInfo;
-    const parsedValue = parseAsAmount(value, brand, assetKind, decimalPlaces).value;
-    return stringifyValue(parsedValue, assetKind, decimalPlaces);
-  };
-
   const parseUserInput = (brand, str) => {
     const displayInfo = getDisplayInfo(brand);
 
@@ -47,9 +37,12 @@ export default function ExchangeInterface() {
     return parseAsAmount(str, brand, assetKind, decimalPlaces).value;
   };
 
-  const handleInputChange = (ev) => {
-    const value = ev.target.value;
-    setInputValue(value);
+  const handleInputChange = (ev, setFieldValue) => {
+    let value = ev.target.value;
+
+    const formattedValue = value.replace(/[^0-9.]/g, '').replace(/(\..*?)\./g, '$1');
+
+    setFieldValue(formattedValue);
   };
 
   const handleExchange = () => {
@@ -100,7 +93,7 @@ export default function ExchangeInterface() {
         <input
           type="text"
           value={getFormattedInputValue(firstValue, inputValue)}
-          onChange={handleInputChange}
+          onChange={(e) => handleInputChange(e, setInputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />
@@ -132,8 +125,8 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={outputValue}
-          onChange={(e) => setOutputValue(e.target.value)}
+          value={getFormattedInputValue(secondValue, outputValue)}
+          onChange={(e) => handleInputChange(e, setOutputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />

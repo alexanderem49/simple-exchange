@@ -12,6 +12,7 @@
   "dependencies": {
     "@agoric/rpc": "^0.6.0",
     "@agoric/ui-components": "0.9.0",
+    "@agoric/web-components": "0.12.1-dev-74299fa.0",
     "@headlessui/react": "1.7.17",
     "@heroicons/react": "^2.0.18",
     "autoprefixer": "10.4.8",
