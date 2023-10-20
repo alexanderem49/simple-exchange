@@ -1,4 +1,4 @@
-import { test } from './prepare-test-env-ava.js';
+import { test } from '../tools/prepare-test-env-ava.js';
 import { E } from '@endo/eventual-send';
 import { AmountMath } from '@agoric/ertp';
 import { makeScalarMapStore } from '@agoric/store';
@@ -15,7 +15,7 @@ import {
   setupSmartWallet,
   setupUpgradableSimpleExchange,
   setupFakeAgoricNamesWithAssets,
-} from './tools/setup.js';
+} from '../tools/setup.js';
 
 test.before(async (t) => {
   const withBankManager = async () => {

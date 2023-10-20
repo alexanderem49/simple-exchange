@@ -1,4 +1,4 @@
-import { test } from '../prepare-test-env-ava.js';
+import { test } from '../tools/prepare-test-env-ava.js';
 import { buildVatController } from '@agoric/swingset-vat';
 import { resolve as importMetaResolve } from 'import-meta-resolve';
 

@@ -1,10 +1,11 @@
-import { test } from './prepare-test-env-ava.js';
-import { E } from '@endo/eventual-send';
+import { test } from '../tools/prepare-test-env-ava.js';
+import { E } from '@endo/far';
 import { setUpZoeForTest } from '@agoric/inter-protocol/test/supports.js';
-import { AmountMath, AssetKind, makeIssuerKit } from '@agoric/ertp';
-import { makeSimpleExchangeAssertions } from './tools/assertions.js';
-import { makeSimpleExchangeHelpers } from './tools/helpers.js';
-import { setupSimpleExchange, setupAssets } from './tools/setup.js';
+import { makeIssuerKit, AmountMath, AssetKind } from '@agoric/ertp';
+import { makeSimpleExchangeAssertions } from '../tools/assertions.js';
+import { makeSimpleExchangeHelpers } from '../tools/helpers.js';
+import { setupUpgradableSimpleExchange, setupAssets } from '../tools/setup.js';
+import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
 
 test.beforeEach(async (t) => {
   const { zoe } = await setUpZoeForTest(() => {});
@@ -13,14 +14,12 @@ test.beforeEach(async (t) => {
   const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
   const moola = makeSimpleMake(assets.moolaKit.brand);
   const simoleans = makeSimpleMake(assets.simoleanKit.brand);
-  const nothing = makeSimpleMake(assets.nothingKit.brand);
 
   t.context = {
     zoe,
     assets,
     moola,
     simoleans,
-    nothing,
   };
 });
 
@@ -30,14 +29,17 @@ test('make sell offer', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -51,13 +53,14 @@ test('make sell offer', async (t) => {
   );
 
   const seat = await E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
 
   const offerResult = await E(seat).getOfferResult();
   assertions.assertOfferResult(offerResult, 'Order Added');
 
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 });
 
@@ -67,14 +70,17 @@ test('make buy offer', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -84,13 +90,14 @@ test('make buy offer', async (t) => {
   const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(assets, 3n, 4n);
 
   const seat = await E(zoe).offer(invitation, buyOrderProposal, buyPayment);
+  await eventLoopIteration();
 
   const offerResult = await E(seat).getOfferResult();
   assertions.assertOfferResult(offerResult, 'Order Added');
 
   expectedBuys = [buyOrderProposal];
   expectedSells = [];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 });
 
@@ -100,14 +107,17 @@ test('make trade', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -129,13 +139,14 @@ test('make trade', async (t) => {
     sellOrderProposal,
     sellPayment,
   );
+  await eventLoopIteration();
 
   const offerResult = await E(aliceSeat).getOfferResult();
   assertions.assertOfferResult(offerResult, 'Order Added');
 
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   // Bob makes a buy offer
@@ -151,6 +162,7 @@ test('make trade', async (t) => {
     buyOrderProposal,
     buyPayment,
   );
+  await eventLoopIteration();
 
   const bobOfferResult = await E(bobSeat).getOfferResult();
   assertions.assertOfferResult(bobOfferResult, 'Order Added');
@@ -158,7 +170,7 @@ test('make trade', async (t) => {
   // As the trade is made, the order book should be cleared
   expectedBuys = [];
   expectedSells = [];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   // Asset assets are swapped
@@ -178,7 +190,10 @@ test('make offer with wrong issuers', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -187,8 +202,8 @@ test('make offer with wrong issuers', async (t) => {
   assertions.assertNotIssuer(issuers.Asset, nothingKit.issuer);
   assertions.assertNotIssuer(issuers.Price, nothingKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -199,14 +214,20 @@ test('make offer with wrong issuers', async (t) => {
     helpers.makeInvalidOffer(assets, 3n, 4n, 'wrongWantIssuer');
 
   let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidOffer(assets, 3n, 4n, 'wrongGiveIssuer'));
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidOffer(
+    assets,
+    3n,
+    4n,
+    'wrongGiveIssuer',
+  ));
 
   seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 });
@@ -217,14 +238,17 @@ test('make offer with offerProposal missing attribute', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -234,13 +258,19 @@ test('make offer with offerProposal missing attribute', async (t) => {
   let { sellOrderProposal, sellPayment, expectedError } =
     helpers.makeInvalidOffer(assets, 3n, 4n, 'missingWant');
   let seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 
   invitation = await E(publicFacet).makeInvitation();
-  ({ sellOrderProposal, sellPayment, expectedError } =
-    helpers.makeInvalidOffer(assets, 3n, 4n, 'missingGive'));
+  ({ sellOrderProposal, sellPayment, expectedError } = helpers.makeInvalidOffer(
+    assets,
+    3n,
+    4n,
+    'missingGive',
+  ));
   seatPromise = E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
 
   await assertions.assertThrowError(seatPromise, expectedError);
 });
@@ -250,14 +280,17 @@ test('make offer without offerProposal', async (t) => {
   const { moolaKit, simoleanKit } = assets;
   const assertions = makeSimpleExchangeAssertions(t);
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -266,6 +299,7 @@ test('make offer without offerProposal', async (t) => {
   const invitation = await E(publicFacet).makeInvitation();
 
   const seatPromise = E(zoe).offer(invitation, undefined, undefined);
+  await eventLoopIteration();
 
   await assertions.assertThrowError(
     seatPromise,
@@ -279,14 +313,17 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   const assertions = makeSimpleExchangeAssertions(t);
   const helpers = makeSimpleExchangeHelpers();
 
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -307,6 +344,7 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
         sellOrderProposal,
         sellPayment,
       );
+      await eventLoopIteration();
 
       await assertions.assertThrowError(seatPromise, expectedError);
     },
@@ -324,7 +362,7 @@ test('make offer with NFT', async (t) => {
 
   // Make NFT kit
   const moolaKit = makeIssuerKit('Moola', AssetKind.SET);
-  const { publicFacet, instance } = await setupSimpleExchange(zoe, {
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, {
     moolaKit,
     simoleanKit,
   });
@@ -333,8 +371,8 @@ test('make offer with NFT', async (t) => {
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
-  const notifier = await E(publicFacet).getNotifier();
-  let orderBook = await E(notifier).getUpdateSince();
+  const subscriber = await E(publicFacet).getSubscriber();
+  let orderBook = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
@@ -356,13 +394,14 @@ test('make offer with NFT', async (t) => {
     sellOrderProposal,
     sellPayment,
   );
+  await eventLoopIteration();
 
   const aliceOfferResult = await E(aliceSeat).getOfferResult();
   assertions.assertOfferResult(aliceOfferResult, 'Order Added');
 
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   // Bob makes a buy offer
@@ -378,6 +417,7 @@ test('make offer with NFT', async (t) => {
     buyOrderProposal,
     buyPayment,
   );
+  await eventLoopIteration();
 
   const bobOfferResult = await E(bobSeat).getOfferResult();
   assertions.assertOfferResult(bobOfferResult, 'Order Added');
@@ -385,7 +425,7 @@ test('make offer with NFT', async (t) => {
   // As the trade is made, the order book should be cleared
   expectedBuys = [];
   expectedSells = [];
-  orderBook = await E(notifier).getUpdateSince();
+  orderBook = await E(subscriber).getUpdateSince();
   assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
 
   // Asset assets are swapped
