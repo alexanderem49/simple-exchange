@@ -1,27 +1,9 @@
 import { E } from '@endo/far';
 
-export const setupAssets = () => {
-  const moolaKit = makeIssuerKit('Moola');
-  const simoleanKit = makeIssuerKit('Simolean');
-  return harden({ moolaKit, simoleanKit });
-};
-
-export const setupFakeAgoricNamesWithAssets = async (
-  assets,
-  agoricNamesAdmin,
-) => {
-  for (const value of Object.values(assets)) {
-    const name = value.issuer.getAllegedName();
-    await Promise.all([
-      E(E(agoricNamesAdmin).lookupAdmin('issuer')).update(name, value.issuer),
-      E(E(agoricNamesAdmin).lookupAdmin('brand')).update(name, value.brand),
-    ]);
-  }
-};
-
 export const initSimpleExchange = async (powers) => {
   const {
-    consume: { zoe, board, chainStorage, agoricNamesAdmin },
+    consume: { zoe, board, chainStorage, agoricNames },
+    produce: { simpleExchangeKit },
     installation: {
       consume: { simpleExchangeInstallation },
     },
@@ -30,21 +12,21 @@ export const initSimpleExchange = async (powers) => {
     },
   } = powers;
 
-  const assets = setupAssets();
-  await setupFakeAgoricNamesWithAssets(assets, await agoricNamesAdmin);
-
   const marshaller = await E(board).getPublishingMarshaller();
   const storageNode = await E(chainStorage).makeChildNode('simpleExchange');
 
+  const assetIssuer = await E(agoricNames).lookup('issuer', 'BLD');
+  const priceIssuer = await E(agoricNames).lookup('issuer', 'IST');
+
   const issuerKeywordRecord = harden({
-    Asset: assets.moolaKit.issuer,
-    Price: assets.simoleanKit.issuer,
+    Asset: assetIssuer,
+    Price: priceIssuer,
   });
 
   const privateArgs = harden({ marshaller, storageNode });
 
   const installation = await simpleExchangeInstallation;
-  
+
   const instanceFacets = await E(zoe).startInstance(
     installation,
     issuerKeywordRecord,
@@ -52,8 +34,10 @@ export const initSimpleExchange = async (powers) => {
     privateArgs,
     'simpleExchange',
   );
-  console.log('Log: instanceFacets = ', { instanceFacets });
 
+  simpleExchangeKit.reset();
+  simpleExchangeKit.resolve(instanceFacets);
+  simpleExchangeInstance.reset();
   simpleExchangeInstance.resolve(instanceFacets.instance);
 };
 
@@ -68,9 +52,11 @@ export const getManifestForInitSimpleExchange = async (
           zoe: 'zoe',
           board: true,
           chainStorage: true,
-          agoricNamesAdmin: true,
+          agoricNames: true,
         },
-        produce: {},
+        produce: {
+          simpleExchangeKit: true,
+        },
         installation: {
           consume: {
             simpleExchangeInstallation: true,
