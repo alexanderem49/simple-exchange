@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-- agoric-sdk: agoric-upgrade-11wf
+- agoric-sdk repo: commit 46a7b2e09 
 
 ## Launch local chain and client
 
-> cd agoric-sdk/packages/inter-protocol/scripts  
+> cd agoric-sdk/packages/agoric-cli/tests   
 > ./start-local-chain.sh
 
 > cd agoric-sdk/packages/cosmic-swingset  
@@ -15,6 +15,10 @@
 ## Submit core-eval
 
 > cd simple-exchange/  
+> make build-proposal
+
+Note: update the CONTRACT_REF_BUNDLE_ID and MANIFEST_REF_BUNDLE_ID based on the output of the target above
+
 > make submit-core-eval
 
 ## Run smoke tests (WiP)
