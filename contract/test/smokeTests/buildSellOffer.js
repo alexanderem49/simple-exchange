@@ -21,8 +21,8 @@ const main = () => {
         publicInvitationMaker: 'makeInvitation',
       },
       proposal: {
-        give: { Asset: {assetAmount} },
-        want: { Price: {priceAmount} },
+        give: { Asset: assetAmount },
+        want: { Price: priceAmount },
       },
     },
   };
