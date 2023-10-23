@@ -24,7 +24,7 @@ test.before(async (t) => {
     const bankManager = E(
       buildBankVatRoot(undefined, undefined, baggage),
     ).makeBankManager(noBridge);
-    const noop = () => {};
+    const noop = () => { };
     const space0 = await makeMockTestSpace(noop);
     space0.produce.bankManager.reset();
     space0.produce.bankManager.resolve(bankManager);
@@ -59,12 +59,36 @@ test('test make sell offer', async (t) => {
     consume: { agoricNamesAdmin, agoricNames },
   } = t.context;
 
-  const { smartWallet } = await setupSmartWallet(t);
+  // Create smart wallets for the seller and buyer
+  const { smartWallet: sellerSmartWallet } = await setupSmartWallet(t, "agoric1test1seller");
+  const { smartWallet: buyerSmartWallet } = await setupSmartWallet(t, "agoric1test1buyer");
 
-  const depositFacet = await E(smartWallet).getDepositFacet();
-  const offersFacet = await E(smartWallet).getOffersFacet();
-  const currentSub = E(smartWallet).getCurrentSubscriber();
+  // Function to assert that the balance of a given asset in wallet is as expected
+  const assertAssetBalance = async (wallet, expected) => {
+    await eventLoopIteration();
+    const currentSub = E(wallet).getCurrentSubscriber();
+    const value = await headValue(currentSub);
 
+    const balance = value.purses.filter(({ balance }) => {
+      return balance.brand === expected.brand;
+    });
+
+    // in case purse is missing and expected value is 0
+    if (expected.value === 0n && balance.length === 0) {
+      return;
+    }
+
+    t.deepEqual(balance.length, 1);
+    t.deepEqual(balance[0].balance.value, expected.value)
+  }
+
+  // Set up the deposit and offers facets for the seller and buyer
+  const depositFacetSeller = await E(sellerSmartWallet).getDepositFacet();
+  const offersFacetSeller = await E(sellerSmartWallet).getOffersFacet();
+  const buyerDepositFacet = await E(buyerSmartWallet).getDepositFacet();
+  const buyerOffersFacet = await E(buyerSmartWallet).getOffersFacet();
+
+  // Set up the contract environment and the contract itself
   await setupFakeAgoricNamesWithAssets(
     { moolaKit, simoleanKit },
     agoricNamesAdmin,
@@ -77,16 +101,34 @@ test('test make sell offer', async (t) => {
     simoleanKit,
   });
 
+  // Create amounts constants
   const moolaAmount = AmountMath.make(moolaKit.brand, 3n);
+  const moolaZeroAmount = AmountMath.make(moolaKit.brand, 0n);
   const simoleansAmount = AmountMath.make(simoleanKit.brand, 5n);
+  const simoleansZeroAmount = AmountMath.make(simoleanKit.brand, 0n);
 
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moolaAmount);
-  await E(depositFacet).receive(aliceMoolaPayment);
+  // Before mint all balances should be 0
+  await assertAssetBalance(sellerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(sellerSmartWallet, simoleansZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, simoleansZeroAmount);
 
-  const invitation = await E(publicFacet).makeInvitation();
-  await E(depositFacet).receive(invitation);
+  // Mint moolas to the seller
+  const sellerMoolaPayment = moolaKit.mint.mintPayment(moolaAmount);
+  await E(depositFacetSeller).receive(sellerMoolaPayment);
 
-  const offer = {
+  // Assert that everyone has the correct balance after minting moolas to the seller
+  await assertAssetBalance(sellerSmartWallet, moolaAmount);
+  await assertAssetBalance(sellerSmartWallet, simoleansZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, simoleansZeroAmount);
+
+  // Execute sell:
+  // Seller requests and claims the invitation
+  const sellerInvitation = await E(publicFacet).makeInvitation();
+  await E(depositFacetSeller).receive(sellerInvitation);
+
+  const sellerOffer = {
     id: 'makeSellOffer',
     invitationSpec: {
       source: 'contract',
@@ -99,12 +141,56 @@ test('test make sell offer', async (t) => {
     },
   };
 
-  E(offersFacet).executeOffer(harden(offer));
+  // Seller makes the offer, selling moolas for simoleans
+  E(offersFacetSeller).executeOffer(harden(sellerOffer));
   await eventLoopIteration();
 
-  const currentState = await headValue(currentSub);
-  let liveOffers = new Map(currentState.liveOffers);
-  console.log(currentState);
-  console.log(liveOffers.get('makeSellOffer'));
-  t.deepEqual(liveOffers.get('makeSellOffer'), offer);
+  // After making an invitation, seller balance should be 0
+  await assertAssetBalance(sellerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(sellerSmartWallet, simoleansZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, simoleansZeroAmount);
+
+  // Mint simoleans to the buyer
+  const buyerSimoleanPayment = simoleanKit.mint.mintPayment(simoleansAmount);
+  await E(buyerDepositFacet).receive(buyerSimoleanPayment);
+
+  // Assert that everyone has the correct balance after minting simoleans to the buyer
+  await assertAssetBalance(sellerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(sellerSmartWallet, simoleansZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(buyerSmartWallet, simoleansAmount);
+
+  // Execute buy:
+  // Buyer requests and claims the invitation
+  const buyerInvitation = await E(publicFacet).makeInvitation();
+  await E(buyerDepositFacet).receive(buyerInvitation);
+
+  const buyerOffer = {
+    id: 'makeBuyOffer',
+    invitationSpec: {
+      source: 'contract',
+      instance,
+      publicInvitationMaker: 'makeInvitation',
+    },
+    proposal: {
+      want: { Asset: moolaAmount },
+      give: { Price: simoleansAmount },
+    },
+  }
+
+  // Buyer makes the offer, buying moolas for simoleans
+  E(buyerOffersFacet).executeOffer(harden(buyerOffer));
+  await eventLoopIteration();
+
+  // When the contract handles the offer, it should find the matching sell offer and
+  // execute the exchange of assets between the seller and the buyer.
+
+  // Assert that the exchange was successful
+  await assertAssetBalance(sellerSmartWallet, moolaZeroAmount);
+  await assertAssetBalance(sellerSmartWallet, simoleansAmount);
+  await assertAssetBalance(buyerSmartWallet, moolaAmount);
+  await assertAssetBalance(buyerSmartWallet, simoleansZeroAmount);
+
+  t.pass();
 });

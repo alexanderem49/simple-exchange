@@ -77,10 +77,9 @@ export const setupFakeAgoricNamesWithAssets = async (
 };
 harden(setupFakeAgoricNamesWithAssets);
 
-export const setupSmartWallet = async (t) => {
+export const setupSmartWallet = async (t, address = `agoric1test1`) => {
   const { simpleProvideWallet } = t.context;
 
-  const address = `agoric1test1`;
   const smartWallet = simpleProvideWallet(address);
 
   return {

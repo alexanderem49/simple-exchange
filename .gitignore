@@ -14,3 +14,5 @@ contract/test/smokeTests/assetList.js
 contract/test/smokeTests/referenceList.js
 
 .DS_Store
+
+bundle-walletFactory*
