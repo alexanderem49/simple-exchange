@@ -30,7 +30,7 @@
     "@agoric/ertp": "beta",
     "@endo/eventual-send": "^0.14.8",
     "@endo/far": "^0.2.14",
-    "@endo/init": "^0.5.37",
+    "@endo/init": "^0.5.56",
     "@endo/marshal": "^0.6.9",
     "@agoric/notifier": "beta",
     "@agoric/store": "beta",
