@@ -13,9 +13,8 @@ PROPOSAL_BUILDER = ${shell pwd}/contract/src/proposal/proposalBuilder-script.js
 HOME = $(SDK_ROOT)/packages/cosmic-swingset/t1/bootstrap
 FROM = bootstrap
 
-CONTRACT_REF_BUNDLE_ID = @cache/b1-8196beb7c9d93fc869a36c675b8fb64faa422248ccd2a18bdee9974baad9f25fd507376ecf8d2864082faadd7f07a57abb9b258ae26b4f5c209d477197308a54.json
-MANIFEST_REF_BUNDLE_ID = @cache/b1-26c2eb70a48ecdb8b0ef659b2b29f772ff5fff34111c87d2adb17ad884328956c2abaf7d493c18d36398028a75be97c300989e0071ff3ee428a4efc9b4c5f553.json
-
+CONTRACT_REF_BUNDLE_ID = @cache/b1-bd403b1eef170b3440a793f4a09338d9379e0da410f2c501368e9deff6b4d294bd49a8425d9e5b4f442e18baf656f825b7959772dcc67306eca6f5eb616e5235.json
+MANIFEST_REF_BUNDLE_ID = @cache/b1-af3f5c1ce904d1687bd99937fd2b27c4f405866ce159b588c143266f495476ee295c86791f70e622436bbda13ae6f9619baac3608d1252b3d77c0e091d02476f.json
 
 build-proposal:
 	rm -rf ${shell pwd}/cache/*
@@ -40,4 +39,4 @@ vote:
 		--gas=auto --gas-adjustment=$(GAS_ADJUSTMENT) \
 		--from=${FROM} --home=${HOME}  --chain-id=${LOCAL_CHAIN_ID} --keyring-backend=test --yes -b block
 
-submit-core-eval: build-proposal install-contract-bundle install-manifest-bundle submit-proposal vote
+submit-core-eval: install-contract-bundle install-manifest-bundle submit-proposal vote
