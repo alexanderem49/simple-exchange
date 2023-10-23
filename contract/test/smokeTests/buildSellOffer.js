@@ -1,5 +1,5 @@
 import '@endo/init';
-// import { AmountMath } from '@agoric/ertp';
+import { AmountMath } from '@agoric/ertp';
 import { makeSmokeTestMarshaller } from './smokeTestMarshaller.js';
 
 const main = () => {
@@ -8,8 +8,8 @@ const main = () => {
     assets: { instance, agoricNamesAssets },
   } = makeSmokeTestMarshaller();
 
-  // const assetAmount = AmountMath.make(agoricNamesAssets.BLD.brand, harden(2n));
-  // const priceAmount = AmountMath.make(agoricNamesAssets.IST.brand, harden(5n));
+  const assetAmount = AmountMath.make(agoricNamesAssets.BLD.brand, harden(2n));
+  const priceAmount = AmountMath.make(agoricNamesAssets.IST.brand, harden(5n));
 
   const spendAction = {
     method: 'executeOffer',
@@ -21,8 +21,8 @@ const main = () => {
         publicInvitationMaker: 'makeInvitation',
       },
       proposal: {
-        give: { Asset: {} },
-        want: { Price: {} },
+        give: { Asset: {assetAmount} },
+        want: { Price: {priceAmount} },
       },
     },
   };
