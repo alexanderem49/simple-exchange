@@ -11,6 +11,7 @@ The exchange contract was written with simplicity in mind. It allows the exchang
 - Tests:
   - Unit tests (both versions)
      - testing helpers
-  - Integration test
+  - Integration tests
   - Swingset tests (upgradable version)
-
+  - Smoke tests
+- Core-eval proposals
