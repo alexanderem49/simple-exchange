@@ -3,6 +3,9 @@ import { AmountMath } from '@agoric/ertp';
 import { makeSmokeTestMarshaller } from './smokeTestMarshaller.js';
 
 const main = () => {
+  const buyIndex = process.env.BUY_INDEX || 0;
+  const offerId = `makeBuyOffer${buyIndex}`;
+
   const {
     serialize,
     assets: { instance, agoricNamesAssets },
@@ -14,7 +17,7 @@ const main = () => {
   const spendAction = {
     method: 'executeOffer',
     offer: {
-      id: 'makeBuyOffer',
+      id: offerId,
       invitationSpec: {
         source: 'contract',
         instance,
