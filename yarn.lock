@@ -1331,7 +1331,7 @@
     "@endo/base64" "^0.2.32"
     "@endo/compartment-mapper" "^0.8.5"
 
-"@endo/init@^0.5.37", "@endo/init@^0.5.41":
+"@endo/init@^0.5.41":
   version "0.5.41"
   resolved "https://registry.yarnpkg.com/@endo/init/-/init-0.5.41.tgz#de8bd3aee1ba2077da281373eb3713f35729ef29"
   integrity sha512-3nsm/fneWtKXTj7bMQZbrahST2OqT/9y9G9KQ0ozfvVdoWczMiXn3TACTaXBDYRHz4b4lx0Km/uO3VKt7sY7Wg==
@@ -4276,7 +4276,7 @@ eslint@^7.32.0:
     text-table "^0.2.0"
     v8-compile-cache "^2.0.3"
 
-esm@agoric-labs/esm#Agoric-built, "esm@github:agoric-labs/esm#Agoric-built":
+esm@agoric-labs/esm#Agoric-built:
   version "3.2.25"
   resolved "https://codeload.github.com/agoric-labs/esm/tar.gz/3603726ad4636b2f865f463188fcaade6375638e"
 
