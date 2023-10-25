@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
 import { XCircleIcon } from '@heroicons/react/24/outline/index.js';
+import { buyOffer, makeGenericOnStatusUpdate } from '../utils/makeOrder.js';
 
 export default function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -12,10 +13,13 @@ export default function ExchangeInterface() {
   const [secondValue, setSecondValue] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const wallet = useStore((state) => state.wallet);
+  const notifyUser = useStore((state) => state.notifyUser);
 
   const isBuyOrder = firstLabel === 'Price:';
 
   const vbankAssets = useStore((state) => state.vbankAssets);
+  const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser);
 
   const closeNotification = () => {
     setShowNotification(false);
@@ -58,8 +62,16 @@ export default function ExchangeInterface() {
       console.log('Both fields are required');
       return;
     }
+    const offerSpec = buyOffer(parsedInput, parsedOutput);
 
-    // Implement the logic for making the order with parsedInput and parsedOutput
+    void wallet.makeOffer(
+      offerSpec.invitationSpec,
+      offerSpec.proposal,
+      offerSpec.offerArgs,
+      onStatusChange,
+      offerSpec.id
+    );
+
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };

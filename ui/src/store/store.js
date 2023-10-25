@@ -15,14 +15,23 @@ export const useStore = create((set, get) => ({
   notifierState: { open: false, severity: '', message: '' },
   exchangeAssets: [],
   vbankAssets: [],
+  buyOrders: [],
+  sellOrders: [],
+  setOrders: (simpleExchange) => {
+    const buyOrders = [...simpleExchange.buys];
+    const sellOrders = [...simpleExchange.sells];
+    console.log('buyOrders: ', buyOrders);
+    console.log('sellOrders: ', sellOrders);
+    set({ buyOrders, sellOrders });
+  },
+  notifyUser: (severity, message) => {
+    set(() => ({
+      notifierState: { open: true, severity, message }
+    }));
+  },
   setExchangedBrands: (vbankAssets) => {
     const assetBrand = {};
     const priceBrand = {};
-
-    vbankAssets.forEach(([denom, assetInfo]) => {
-      console.log('denom: ', denom);
-      console.log('assetInfo: ', assetInfo);
-    });
 
     vbankAssets.forEach(([denom, assetInfo]) => {
       if (denom === 'ubld') {

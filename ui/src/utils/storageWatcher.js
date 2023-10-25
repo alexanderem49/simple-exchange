@@ -2,7 +2,7 @@ import { useStore } from '../store/store.js';
 import { AgoricChainStoragePathKind } from '@agoric/rpc';
 
 const makeStorageWatcher = () => {
-  const { watcher, wallet, registerRentals, setExchangedBrands } = useStore.getState();
+  const { watcher, wallet, registerRentals, setExchangedBrands, setOrders } = useStore.getState();
 
   const watchSmartWallet = () => {
     watcher.watchLatest(
@@ -26,6 +26,12 @@ const makeStorageWatcher = () => {
     });
   };
 
+  const watchSimpleExchange = () => {
+    watcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.simpleExchange'], (simpleExchange) => {
+      setOrders(simpleExchange);
+    });
+  };
+
   const startWatching = () => {
     if (!watcher) return;
 
@@ -34,6 +40,7 @@ const makeStorageWatcher = () => {
     }
 
     watchVbankAsset();
+    watchSimpleExchange();
   };
 
   return { startWatching };
