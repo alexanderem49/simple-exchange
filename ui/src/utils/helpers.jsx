@@ -1,8 +1,9 @@
-export const mockData = [
+export const sellMockData = [
   { date: '2022-11-02', status: 'Completed', nftName: 'CryptoPunk' },
-  { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' },
-  { date: '2022-11-02', status: 'Cancelled', nftName: 'CryptoPunk' },
-  { date: '2022-11-03', status: 'CounterProposal', nftName: 'Bored Ape' },
+  { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' }
+];
+
+export const buyMockData = [
   { date: '2022-11-02', status: 'Completed', nftName: 'CryptoPunk' },
   { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' }
 ];

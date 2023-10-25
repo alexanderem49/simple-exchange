@@ -4,26 +4,19 @@ import { makeAgoricWalletConnection, suggestChain } from '@agoric/web-components
 import { useStore } from '../store/store.js';
 
 function NavBar() {
-  const [isConnected, setIsConnected] = useState(false);
+  const [wallet, setWallet] = useState(null);
   const watcher = useStore((state) => state.watcher);
 
   const connectWallet = async () => {
     try {
-      setIsConnected(true);
       await suggestChain('https://local.agoric.net/network-config');
-      const wallet = await makeAgoricWalletConnection(watcher);
-      useStore.setState({ wallet });
-      console.log('Wallet connected', { wallet });
+      const connectedWallet = await makeAgoricWalletConnection(watcher);
+      useStore.setState({ wallet: connectedWallet });
+      setWallet(connectedWallet);
+      console.log('Wallet connected', { connectedWallet });
     } catch (error) {
       console.error('Error connecting to the wallet:', error);
-      setIsConnected(false);
     }
-  };
-
-  const disconnectWallet = () => {
-    setIsConnected(false);
-    console.log('Wallet disconnected');
-    useStore.setState({ wallet: null });
   };
 
   console.log('wallet ');
@@ -37,19 +30,21 @@ function NavBar() {
         </div>
 
         <div className="flex items-center space-x-6">
-          {isConnected ? (
-            <>
-              <span className="self-center text-white mr-4">User Name</span>
-            </>
-          ) : (
-            <UserCircleIcon className="h-8 w-8 text-white mr-4" aria-hidden="true" />
-          )}
-
           <button
-            onClick={isConnected ? disconnectWallet : connectWallet}
-            className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white focus:outline-none"
+            onClick={connectWallet}
+            disabled={!!wallet}
+            className={`py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white focus:outline-none ${
+              wallet ? 'cursor-not-allowed opacity-50' : ''
+            }`}
           >
-            {isConnected ? 'Disconnect' : 'Connect'}
+            {wallet ? (
+              <span className="flex items-center">
+                <UserCircleIcon className="h-6 w-6 mr-2" aria-hidden="true" />
+                {`${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`}
+              </span>
+            ) : (
+              'Connect'
+            )}
           </button>
         </div>
       </nav>

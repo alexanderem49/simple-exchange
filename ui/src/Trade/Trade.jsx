@@ -1,11 +1,11 @@
 import ExchangeInterface from './ExchangeInterface';
 import { useState } from 'react';
-import { getStatusChip, mockData } from '../utils/helpers.jsx';
+import { buyMockData, getStatusChip, sellMockData } from '../utils/helpers.jsx';
 
 function Trade() {
   const [activeTab, setActiveTab] = useState('all-orders');
 
-  const renderTableContent = () => (
+  const renderTableContent = (data) => (
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
       <thead>
         <tr className="text-left">
@@ -15,11 +15,11 @@ function Trade() {
         </tr>
       </thead>
       <tbody>
-        {mockData.map((data, index) => (
+        {data.map((item, index) => (
           <tr key={index}>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{data.date}</td>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{getStatusChip(data.status)}</td>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{data.nftName}</td>
+            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.date}</td>
+            <td className="py-2 px-4 border-b border-gray-200 text-sm">{getStatusChip(item.status)}</td>
+            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.nftName}</td>
           </tr>
         ))}
       </tbody>
@@ -55,23 +55,35 @@ function Trade() {
           </button>
         </div>
         <div className="flex space-x-4">
-          {mockData.length > 0 ? (
+          {sellMockData.length === 0 && buyMockData.length === 0 ? (
+            <div className="w-full">{renderNoDataContent()}</div>
+          ) : (
             <>
               <div className="flex flex-col w-1/2 space-y-4">
-                <h2 className="text-lg font-bold">Sell</h2>
-                <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                  {renderTableContent()}
-                </div>
+                {sellMockData.length > 0 ? (
+                  <>
+                    <h2 className="text-lg font-bold">Sell</h2>
+                    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
+                      {renderTableContent(sellMockData)}
+                    </div>
+                  </>
+                ) : (
+                  renderNoDataContent()
+                )}
               </div>
               <div className="flex flex-col w-1/2 space-y-4">
-                <h2 className="text-lg font-bold">Buy</h2>
-                <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                  {renderTableContent()}
-                </div>
+                {buyMockData.length > 0 ? (
+                  <>
+                    <h2 className="text-lg font-bold">Buy</h2>
+                    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
+                      {renderTableContent(buyMockData)}
+                    </div>
+                  </>
+                ) : (
+                  renderNoDataContent()
+                )}
               </div>
             </>
-          ) : (
-            <div className="w-full">{renderNoDataContent()}</div>
           )}
         </div>
       </div>

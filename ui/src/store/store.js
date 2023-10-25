@@ -20,6 +20,11 @@ export const useStore = create((set, get) => ({
     const priceBrand = {};
 
     vbankAssets.forEach(([denom, assetInfo]) => {
+      console.log('denom: ', denom);
+      console.log('assetInfo: ', assetInfo);
+    });
+
+    vbankAssets.forEach(([denom, assetInfo]) => {
       if (denom === 'ubld') {
         assetBrand[denom] = assetInfo;
       } else if (denom === 'uist') {

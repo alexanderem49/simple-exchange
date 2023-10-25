@@ -8,10 +8,12 @@ export default function ExchangeInterface() {
   const [outputValue, setOutputValue] = useState('');
   const [firstLabel, setFirstLabel] = useState('Asset:');
   const [secondLabel, setSecondLabel] = useState('Price:');
-  const [firstValue, setFirstValue] = useState('uist');
-  const [secondValue, setSecondValue] = useState('ubld');
+  const [firstValue, setFirstValue] = useState('BLD');
+  const [secondValue, setSecondValue] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+
+  const isBuyOrder = firstLabel === 'Price:';
 
   const vbankAssets = useStore((state) => state.vbankAssets);
 
@@ -89,6 +91,7 @@ export default function ExchangeInterface() {
 
   return (
     <div className="p-6 bg-white rounded shadow-lg flex flex-col items-center space-y-4 w-80">
+      <h1 className="text-xl font-bold">{isBuyOrder ? 'Buy' : 'Sell'}</h1>
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
