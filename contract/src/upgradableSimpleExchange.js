@@ -1,10 +1,6 @@
+import { M } from '@agoric/vat-data';
 import { AmountShape } from '@agoric/ertp';
-import {
-  prepareExo,
-  M,
-  makeScalarBigMapStore,
-  provide,
-} from '@agoric/vat-data';
+import { makeDurableZone } from '@agoric/zone/durable.js';
 import { provideAll } from '@agoric/zoe/src/contractSupport';
 import {
   assertIssuerKeywords,
@@ -16,8 +12,9 @@ import {
 
 const prepare = async (zcf, privateArgs, baggage) => {
   const { marshaller, storageNode } = privateArgs;
+  const zone = makeDurableZone(baggage);
 
-  // The contract expects proposals for this contract instance 
+  // The contract expects proposals for this contract instance
   // should use keywords 'Asset' and 'Price'.
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
 
@@ -36,12 +33,8 @@ const prepare = async (zcf, privateArgs, baggage) => {
   // Durable storage is a storage that persists with contract upgrades.
   // Using durable storage makes this contract upgradable without losing
   // the order book data.
-  const sellSeatsMap = provide(baggage, 'sellSeats', () =>
-    makeScalarBigMapStore('sellSeats', { durable: true }),
-  );
-  const buySeatsMap = provide(baggage, 'buySeats', () =>
-    makeScalarBigMapStore('buySeats', { durable: true }),
-  );
+  const sellSeatsMap = zone.mapStore('sellSeats');
+  const buySeatsMap = zone.mapStore('buySeats');
 
   // Return an array of offers that have not yet exited.
   const getOffers = (seatsMap) => {
@@ -66,7 +59,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
   const updateOrderBook = () => recorder.write(getOrderBook());
   updateOrderBook();
 
-  // Checks if the second seat argument's currentAllocation satisfies the 
+  // Checks if the second seat argument's currentAllocation satisfies the
   // first seat argument's proposal.want. Returns true if satisfied.
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
@@ -76,7 +69,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
   // undefined if no offer was found.
   const swapIfCanTrade = (seatsMap, userSeat) => {
     for (const seat of seatsMap.keys()) {
-      // Calls satisfiedBy() on both orders of the two seats. If both 
+      // Calls satisfiedBy() on both orders of the two seats. If both
       // satisfy each other, it does a swap on them.
       if (satisfiedBy(seat, userSeat) && satisfiedBy(userSeat, seat)) {
         // When satisfiable offer is found, swap and return the user seat.
@@ -113,7 +106,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
   // Handle an incoming offer. It checks if the order book has an offer
   // that can be satisfiable for both parties. If so, the swap is executed
   // immediately. If not, the offer is added to the order book. Handler will
-  // throw and exit incoming offer seat immediately if the proposal is 
+  // throw and exit incoming offer seat immediately if the proposal is
   // not a buy or sell order.
   const exchangeOfferHandler = (seat) => {
     // Get the proposal from the seat.
@@ -121,7 +114,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
 
     // Check if the proposal is a buy or sell offer.
 
-    // Buy offer is an offer that wants Asset and gives Price, give.Asset 
+    // Buy offer is an offer that wants Asset and gives Price, give.Asset
     // in this case is undefined.
 
     // Sell offer is an offer that wants Price and gives Asset, want.Asset
@@ -159,14 +152,9 @@ const prepare = async (zcf, privateArgs, baggage) => {
     );
   };
 
-  // The publicFacet has a function that allows users to create the 
-  // invitation to exercise a sell or buy offer, and a function that 
-  // returns a subscriber that will update when the order book changes.
-  // The publicFacet has a baggage parameter that is used to store the
-  // durable storage of the contract and preserve it across upgrades.
-  const publicFacet = prepareExo(
-    baggage,
-    'publicFacet',
+  
+  const publicFacet = zone.exo(
+    'PublicFacet',
     M.interface('publicFacetI', {
       getSubscriber: M.call().returns(SubscriberShape),
       makeInvitation: M.call().returns(M.promise()),
@@ -177,13 +165,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
     },
   );
 
-  // The creatorFacet of the contract, in this case it has no functions.
-  const creatorFacet = prepareExo(
-    baggage,
-    'creatorFacet',
-    M.interface('creatorFacetI', {}),
-    {},
-  );
+  const creatorFacet = zone.exo('CreatorFacet', undefined, {});
 
   return harden({ creatorFacet, publicFacet });
 };
