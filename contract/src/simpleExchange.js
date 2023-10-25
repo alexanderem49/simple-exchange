@@ -10,10 +10,11 @@ import {
 } from '@agoric/zoe/src/contractSupport';
 
 const start = (zcf) => {
-  // The contract expects issuers to be labeled as 'Asset' and 'Price'.
+  // The contract expects proposals for this contract instance 
+  // should use keywords 'Asset' and 'Price'.
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
 
-  // Store the order book in two arrays, one for buys and one for sells.
+  // Store the users seats in two arrays, one for buys and one for sells offers.
   let sellSeats = [];
   let buySeats = [];
 
@@ -30,20 +31,23 @@ const start = (zcf) => {
   // Create a notifier that will update when the order book changes.
   const { notifier, updater } = makeNotifierKit(getOrderBook());
 
-  // Update the notifier when the order book changes.
+  // Update the notifier state when the order book changes.
   const updateOrderBook = () => updater.updateState(getOrderBook());
 
-  // Return true if the first seat is satisfied by the second seat.
-  // Returns true if wants of both seats are satisfied.
+  // Checks if the second seat argument's currentAllocation satisfies the 
+  // first seat argument's proposal.want. Returns true if satisfied.
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
 
   // Execute swap with first satisfiable offer in the array.
-  // Return the satisfiable offer, or undefined if no offer was found.
+  // Return the user seat that made the satisfiable offer, or
+  // undefined if no offer was found.
   const swapIfCanTrade = (offers, seat) => {
     for (const offer of offers) {
+      // Calls satisfiedBy() on both orders of the two seats. If both 
+      // satisfy each other, it does a swap on them.
       if (satisfiedBy(offer, seat) && satisfiedBy(seat, offer)) {
-        // When satisfiable offer is found, swap and return the offer.
+        // When satisfiable offer is found, swap and return the user seat.
         // Swap will throw if the swap fails, no assets will be transferred,
         // and both seats will fail. If the swap succeeds, both seats will
         // be exited and the assets will be transferred.
@@ -57,7 +61,7 @@ const start = (zcf) => {
 
   // Process an incoming offer. If the offer can be satisfied, swap and remove
   // the counter offer from the counterOffers array. If the offer cannot be
-  // satisfied, add the offer to the counterOffers array.
+  // satisfied, add the seat to the counterOffers array.
   const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, seat) => {
     // try to execute a swap
     const offer = swapIfCanTrade(counterOffers, seat);
@@ -70,7 +74,7 @@ const start = (zcf) => {
       coOffers.push(seat);
     }
 
-    // notify the notifier that the order book has changed
+    // Update the notifier state with the changes made to the order book.
     updateOrderBook();
     return counterOffers;
   };
@@ -84,6 +88,13 @@ const start = (zcf) => {
     // Get the proposal from the seat.
     const { want, give } = seat.getProposal();
 
+    // Check if the proposal is a buy or sell offer.
+
+    // Buy offer is an offer that wants Asset and gives Price, give.Asset 
+    // in this case is undefined.
+
+    // Sell offer is an offer that wants Price and gives Asset, want.Asset
+    // in this case is undefined.
     if (want.Asset) {
       // If the proposal is a buy, try to execute a swap with the sell book.
       sellSeats = swapIfCanTradeAndUpdateBook(sellSeats, buySeats, seat);
@@ -102,7 +113,7 @@ const start = (zcf) => {
   };
 
   // Create an invitation to the contract. The incoming offer will be handled
-  // by the exchangeOfferHandler function. Incoming offer seat must match the
+  // by the exchangeOfferHandler function. Incoming offerProposal must match the
   // proposal shape defined by the contract - both give and want must be either
   // Asset or Price.
   const makeExchangeInvitation = () => {
@@ -120,15 +131,14 @@ const start = (zcf) => {
   // The creatorFacet of the contract, in this case it has no functions.
   const creatorFacet = Far('creatorFacet', {});
 
-  // The publicFacet has a function that allows users to create invitations
-  // to the contract, and a function that returns a notifier that will update
-  // when the order book changes.
+  // The publicFacet has a function that allows users to create the 
+  // invitation to exercise a sell or buy offer, and a function that 
+  // returns a notifier that will update when the order book changes.
   const publicFacet = Far('publicFacet', {
     makeInvitation: makeExchangeInvitation,
     getNotifier: () => notifier,
   });
 
-  // Return the facets of the contract.
   return harden({ creatorFacet, publicFacet });
 };
 

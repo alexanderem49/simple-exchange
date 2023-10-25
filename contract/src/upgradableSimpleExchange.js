@@ -17,7 +17,8 @@ import {
 const prepare = async (zcf, privateArgs, baggage) => {
   const { marshaller, storageNode } = privateArgs;
 
-  // The contract expects issuers to be labeled as 'Asset' and 'Price'.
+  // The contract expects proposals for this contract instance 
+  // should use keywords 'Asset' and 'Price'.
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
 
   // Create a recorder kit that will be used to create a subscriber for
@@ -30,7 +31,11 @@ const prepare = async (zcf, privateArgs, baggage) => {
     recorderKit: () => makeRecorderKit(storageNode),
   });
 
-  // Create storages for the order book, one for buys and one for sells.
+  // Create durable storages for the order book, one for buy offers and
+  // one for sell offers.
+  // Durable storage is a storage that persists with contract upgrades.
+  // Using durable storage makes this contract upgradable without losing
+  // the order book data.
   const sellSeatsMap = provide(baggage, 'sellSeats', () =>
     makeScalarBigMapStore('sellSeats', { durable: true }),
   );
@@ -57,20 +62,24 @@ const prepare = async (zcf, privateArgs, baggage) => {
     sells: getOffers(sellSeatsMap),
   });
 
+  // Update the subscriber state when the order book changes.
   const updateOrderBook = () => recorder.write(getOrderBook());
   updateOrderBook();
 
-  // Return true if the first seat is satisfied by the second seat.
-  // Returns true if wants of both seats are satisfied.
+  // Checks if the second seat argument's currentAllocation satisfies the 
+  // first seat argument's proposal.want. Returns true if satisfied.
   const satisfiedBy = (xSeat, ySeat) =>
     satisfies(zcf, xSeat, ySeat.getCurrentAllocation());
 
   // Execute swap with first satisfiable offer in the storage.
-  // Return the satisfiable offer, or undefined if no offer was found.
+  // Return the user seat that made the satisfiable offer, or
+  // undefined if no offer was found.
   const swapIfCanTrade = (seatsMap, userSeat) => {
     for (const seat of seatsMap.keys()) {
+      // Calls satisfiedBy() on both orders of the two seats. If both 
+      // satisfy each other, it does a swap on them.
       if (satisfiedBy(seat, userSeat) && satisfiedBy(userSeat, seat)) {
-        // When satisfiable offer is found, swap and return the offer.
+        // When satisfiable offer is found, swap and return the user seat.
         // Swap will throw if the swap fails, no assets will be transferred,
         // and both seats will fail. If the swap succeeds, both seats will
         // be exited and the assets will be transferred.
@@ -78,22 +87,26 @@ const prepare = async (zcf, privateArgs, baggage) => {
         return seat;
       }
     }
+    // Return undefined if no satisfiable offer was found.
     return undefined;
   };
 
   // Process an incoming offer. If the offer can be satisfied, swap and remove
   // the counter offer from the counterOffers storage. If the offer cannot be
-  // satisfied, add the offer to the counterOffers storage.
+  // satisfied, add the seat to the counterOffers storage.
   const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, userSeat) => {
     // try to execute a swap
     const seat = swapIfCanTrade(counterOffers, userSeat);
+
     if (seat) {
+      // if the swap succeeded, remove the offer from the counterOffers storage
       counterOffers = counterOffers.delete(seat);
     } else {
+      // if the swap was not executed, add the offer to the coOffers storage
       coOffers.init(userSeat, userSeat.getProposal());
     }
 
-    // notify the subscriber that the order book has changed.
+    // Update the subscriber state with the changes made to the order book.
     updateOrderBook();
   };
 
@@ -106,6 +119,13 @@ const prepare = async (zcf, privateArgs, baggage) => {
     // Get the proposal from the seat.
     const { want, give } = seat.getProposal();
 
+    // Check if the proposal is a buy or sell offer.
+
+    // Buy offer is an offer that wants Asset and gives Price, give.Asset 
+    // in this case is undefined.
+
+    // Sell offer is an offer that wants Price and gives Asset, want.Asset
+    // in this case is undefined.
     if (want.Asset) {
       // If the proposal is a buy, try to execute a swap with the sell book.
       swapIfCanTradeAndUpdateBook(sellSeatsMap, buySeatsMap, seat);
@@ -124,7 +144,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
   };
 
   // Create an invitation to the contract. The incoming offer will be handled
-  // by the exchangeOfferHandler function. Incoming offer seat must match the
+  // by the exchangeOfferHandler function. Incoming offerProposal must match the
   // proposal shape defined by the contract - both give and want must be either
   // Asset or Price.
   const makeExchangeInvitation = () => {
@@ -139,9 +159,11 @@ const prepare = async (zcf, privateArgs, baggage) => {
     );
   };
 
-  // The publicFacet has a function that allows users to create invitations
-  // to the contract, and a function that returns a subscriber that will update
-  // when the order book changes.
+  // The publicFacet has a function that allows users to create the 
+  // invitation to exercise a sell or buy offer, and a function that 
+  // returns a subscriber that will update when the order book changes.
+  // The publicFacet has a baggage parameter that is used to store the
+  // durable storage of the contract and preserve it across upgrades.
   const publicFacet = prepareExo(
     baggage,
     'publicFacet',
@@ -163,7 +185,6 @@ const prepare = async (zcf, privateArgs, baggage) => {
     {},
   );
 
-  // Return the facets of the contract.
   return harden({ creatorFacet, publicFacet });
 };
 
