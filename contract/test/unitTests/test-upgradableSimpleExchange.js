@@ -40,12 +40,20 @@ test('make sell offer', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Alice makes a sell offer
   const invitation = await E(publicFacet).makeInvitation();
@@ -66,8 +74,14 @@ test('make sell offer', async (t) => {
   // Assert that the order book was updated and now contains the Alice sell offer
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 });
 
 test('make buy offer', async (t) => {
@@ -87,12 +101,20 @@ test('make buy offer', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Bob makes a buy offer
   const invitation = await E(publicFacet).makeInvitation();
@@ -109,8 +131,14 @@ test('make buy offer', async (t) => {
   // Assert that the order book was updated and now contains the Bob buy offer
   expectedBuys = [buyOrderProposal];
   expectedSells = [];
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 });
 
 test('make trade', async (t) => {
@@ -130,12 +158,20 @@ test('make trade', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   const moolaValue = 3n;
   const simoleanValue = 4n;
@@ -163,8 +199,14 @@ test('make trade', async (t) => {
   // Assert that the order book was updated and now contains the Alice sell offer
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Bob makes a buy offer
   const bobInvitation = await E(publicFacet).makeInvitation();
@@ -189,8 +231,14 @@ test('make trade', async (t) => {
   expectedBuys = [];
   expectedSells = [];
   // As the trade is made, the order book should be cleared
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Assert assets are swapped
   const bobPayout = await E(bobSeat).getPayout('Asset');
@@ -224,12 +272,20 @@ test('make offer with wrong issuers', async (t) => {
   assertions.assertNotIssuer(issuers.Price, nothingKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Alice makes a sell offer with the wrong `want` issuer
   let invitation = await E(publicFacet).makeInvitation();
@@ -277,12 +333,20 @@ test('make offer with offerProposal missing attribute', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Alice makes a sell offer with the missing `want` issuer
   let invitation = await E(publicFacet).makeInvitation();
@@ -328,12 +392,20 @@ test('make offer without offerProposal', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Alice makes a sell offer without offerProposal
   const invitation = await E(publicFacet).makeInvitation();
@@ -365,12 +437,20 @@ test('offers with null or invalid shapes on the proposals', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Get the array of proposals with invalid shapes
   const invalidShapes = helpers.makeInvalidOffer(
@@ -422,12 +502,20 @@ test('make offer with NFT', async (t) => {
   assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
 
   const subscriber = await E(publicFacet).getSubscriber();
-  let orderBook = await E(subscriber).getUpdateSince();
+  let state = await E(subscriber).getUpdateSince();
 
   let expectedBuys = [];
   let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
   // The order book should be empty
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   const moolaValue = harden([{ name: 'Moola', description: 'A set of moola' }]);
   const simoleanValue = 4n;
@@ -455,8 +543,14 @@ test('make offer with NFT', async (t) => {
   // Assert that the order book was updated and now contains the Alice sell offer
   expectedBuys = [];
   expectedSells = [sellOrderProposal];
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Bob makes a buy offer
   const bobInvitation = await E(publicFacet).makeInvitation();
@@ -481,8 +575,14 @@ test('make offer with NFT', async (t) => {
   // As the trade is made, the order book should be cleared
   expectedBuys = [];
   expectedSells = [];
-  orderBook = await E(subscriber).getUpdateSince();
-  assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
 
   // Asset assets are swapped
   const bobPayout = await E(bobSeat).getPayout('Asset');

@@ -16,13 +16,42 @@ export const makeSimpleExchangeAssertions = (t) => {
     t.deepEqual(sells, expectedSells, 'Sells list does not match the expected');
   };
 
-  const assertOrderBookLength = (orderBook, expectedBuys, expectedSells) => {
+  const assertStateLength = (state, expectedBuys, expectedSells) => {
     const {
-      value: { buys, sells },
-    } = orderBook;
+      value: {
+        state: {
+          brands: { Asset, Price },
+          orderBook: { buys, sells },
+        },
+      },
+    } = state;
 
-    t.deepEqual(buys.length, expectedBuys, 'Buys list does not match the expected');
-    t.deepEqual(sells.length, expectedSells, 'Sells list does not match the expected');
+    t.deepEqual(
+      buys.length,
+      expectedBuys,
+      'Buys list does not match the expected',
+    );
+    t.deepEqual(
+      sells.length,
+      expectedSells,
+      'Sells list does not match the expected',
+    );
+  };
+
+  const assertState = (state, expectedBuys, expectedSells, expectedAsset, expectedPrice) => {
+    const {
+      value: {
+        state: {
+          brands: { Asset, Price },
+          orderBook: { buys, sells },
+        },
+      },
+    } = state;
+
+    t.deepEqual(buys, expectedBuys, 'Buys list does not match the expected');
+    t.deepEqual(sells, expectedSells, 'Sells list does not match the expected');
+    t.deepEqual(Asset, expectedAsset, 'Asset brand does not match the expected')
+    t.deepEqual(Price, expectedPrice, 'Price brand does not match the expected')
   };
 
   const assertOfferResult = (offerResult, expected) => {
@@ -49,7 +78,8 @@ export const makeSimpleExchangeAssertions = (t) => {
     assertIssuer,
     assertNotIssuer,
     assertOrderBook,
-    assertOrderBookLength,
+    assertStateLength,
+    assertState,
     assertOfferResult,
     assertPayoutAmount,
     assertThrowError,

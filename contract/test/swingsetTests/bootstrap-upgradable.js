@@ -171,10 +171,10 @@ export const buildRootObject = async () => {
       assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
     },
 
-    assertOrderBookLength: async (expectedBuys, expectedSells) => {
+    assertStateLength: async (expectedBuys, expectedSells) => {
       const orderBook = await E(subscriber).getUpdateSince();
       console.log(orderBook);
-      assertions.assertOrderBookLength(orderBook, expectedBuys, expectedSells);
+      assertions.assertStateLength(orderBook, expectedBuys, expectedSells);
     },
   });
 };
