@@ -35,9 +35,9 @@ export const useStore = create((set, get) => ({
 
     vbankAssets.forEach(([denom, assetInfo]) => {
       if (denom === 'ubld') {
-        assetBrand[denom] = assetInfo;
+        assetBrand[assetInfo.issuerName] = assetInfo;
       } else if (denom === 'uist') {
-        priceBrand[denom] = assetInfo;
+        priceBrand[assetInfo.issuerName] = assetInfo;
       }
     });
 
@@ -48,11 +48,11 @@ export const useStore = create((set, get) => ({
     const { assetBrand, priceBrand, vbankAssets } = get();
 
     if (assetBrand[brand]) {
-      return assetBrand[brand].displayInfo;
+      return assetBrand[brand];
     }
 
     if (priceBrand[brand]) {
-      return priceBrand[brand].displayInfo;
+      return priceBrand[brand];
     }
 
     if (!vbankAssets || !Array.isArray(vbankAssets)) {
@@ -60,6 +60,6 @@ export const useStore = create((set, get) => ({
     }
 
     const asset = vbankAssets.find((asset) => asset[1]?.issuerName === brand);
-    return asset ? asset[1]?.displayInfo : null;
+    return asset ? asset[1] : null;
   }
 }));

@@ -9,8 +9,8 @@ export default function ExchangeInterface() {
   const [outputValue, setOutputValue] = useState('');
   const [firstLabel, setFirstLabel] = useState('Asset:');
   const [secondLabel, setSecondLabel] = useState('Price:');
-  const [firstValue, setFirstValue] = useState('BLD');
-  const [secondValue, setSecondValue] = useState('IST');
+  const [assetBrand, setAssetBrand] = useState('BLD');
+  const [priceBrand, setPriceBrand] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const wallet = useStore((state) => state.wallet);
@@ -33,14 +33,14 @@ export default function ExchangeInterface() {
 
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
-  const parseUserInput = (brand, str) => {
-    const displayInfo = getDisplayInfo(brand);
+  const parseUserInput = (brandName, str) => {
+    const displayInfo = getDisplayInfo(brandName);
 
     if (!displayInfo) return str;
 
-    const { assetKind, decimalPlaces } = displayInfo;
-    console.log('displayInfo: ', displayInfo);
-    return parseAsAmount(str, brand, assetKind, decimalPlaces).value;
+    const { assetKind, decimalPlaces, brand } = displayInfo;
+
+    return parseAsAmount(str, brand, assetKind, decimalPlaces);
   };
 
   const handleInputChange = (ev, setFieldValue) => {
@@ -52,8 +52,8 @@ export default function ExchangeInterface() {
   };
 
   const handleExchange = () => {
-    const parsedInput = parseUserInput(firstValue, inputValue);
-    const parsedOutput = parseUserInput(secondValue, outputValue);
+    const parsedInput = parseUserInput(assetBrand, inputValue);
+    const parsedOutput = parseUserInput(priceBrand, outputValue);
 
     console.log('Parsed Input:', parsedInput);
     console.log('Parsed Output:', parsedOutput);
@@ -62,6 +62,7 @@ export default function ExchangeInterface() {
       console.log('Both fields are required');
       return;
     }
+
     const offerSpec = buyOffer(parsedInput, parsedOutput);
 
     void wallet.makeOffer(
@@ -91,29 +92,29 @@ export default function ExchangeInterface() {
   const handleArrowClick = () => {
     setIsOpen(!isOpen);
     const tempLabel = firstLabel;
-    const tempValue = firstValue;
+    const tempValue = assetBrand;
     const tempInputValue = inputValue;
     setFirstLabel(secondLabel);
     setSecondLabel(tempLabel);
-    setFirstValue(secondValue);
-    setSecondValue(tempValue);
+    setAssetBrand(priceBrand);
+    setPriceBrand(tempValue);
     setInputValue(outputValue);
     setOutputValue(tempInputValue);
   };
 
   return (
     <div className="p-6 bg-white rounded shadow-lg flex flex-col items-center space-y-4 w-80">
-      <h1 className="text-xl font-bold">{isBuyOrder ? 'Buy' : 'Sell'}</h1>
+      <h1 className="text-xl font-bold text-left w-full">{isBuyOrder ? 'Buy' : 'Sell'}</h1>
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={getFormattedInputValue(firstValue, inputValue)}
+          value={getFormattedInputValue(assetBrand, inputValue)}
           onChange={(e) => handleInputChange(e, setInputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {firstLabel} {firstValue}
+          {firstLabel} {assetBrand}
         </span>
       </div>
       <div className="flex items-center mb-3 justify-center w-full mr-28">
@@ -140,13 +141,13 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={getFormattedInputValue(secondValue, outputValue)}
+          value={getFormattedInputValue(priceBrand, outputValue)}
           onChange={(e) => handleInputChange(e, setOutputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {secondLabel} {secondValue}
+          {secondLabel} {priceBrand}
         </span>
       </div>
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">
