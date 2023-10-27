@@ -51,7 +51,7 @@ test.before(async (t) => {
   };
 });
 
-test('test make sell offer', async (t) => {
+test('test trade', async (t) => {
   const {
     zoe,
     moolaKit,
