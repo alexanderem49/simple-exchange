@@ -37,36 +37,110 @@ agoric --version # 0.21.2-u11.0
 
 ## Unit tests
 
-- brief description of testing tools
-- brief description of tests made
-- commands necessary to execute tests
-  - list commands step by step
-  - highlight the output with an example when appropriated
+We use ava as a testing framework and Agoric SDK methods to set up and interact with smart contracts.
+
+We covered most important cases in unit tests, making sure that the exchange contract works as expected, including sucsessful and failing branches. On successful branches we also check that assets are transferred properly to respective accounts and that amounts of assets transferred is correct.
+
+We include 2 versions of unit tests:
+- `./contract/test/unitTests/test-simpleExchange.js`
+- `./contract/test/unitTests/test-upgradableSimpleExchange.js`
+
+Both of these files cover durable and non-durable contract versions. Both of them contain exact same test cases, but each of them reflects the difference when deploying, configuring and communicating with the durable and non-durable contract versions.
+
+Unit tests include following test cases:
+- make sell offer - check that contract properly handles incoming sell offer
+- make buy offer - check that contract properly handles incoming buy offer
+- make trade - check that contract properly executes the trade when sell and buy offer can satisfy each other
+- make offer with wrong issuers - check that offer with wrong issuer fails
+- make offer with offerProposal missing attribute - check that offer with wrong offerProposal attributes fails
+- make offer without offerProposal - check that offer without offerProposal fails
+- offers with null or invalid shapes on the proposals - check with different invalid shapes set that each of them fails
+- make offer with NFT - check that NFTs can be traded on the exchange properly
+
+In order to run unit tests, just run the following command:
+```shell
+yarn unit-test
+```
+This will run tests for both durable and non-durable contract versions. You will see a lot of debug console logs from Agoric SDK, including some errors - these errors are triggered by unit tests to assert the failing branches. In total 16 unit tests should pass.
 
 ## Integration tests
 
-- brief description of testing tools
-- brief description of tests made
-- commands necessary to execute tests
-  - list commands step by step
-  - highlight the output with an example when appropriated
+The integration test is setting up an enviroment with separate smart wallets and checks that exchange contract can execute a successful trade.
+
+The integration test includes only one test case:
+- make trade - executes trade successfully
+
+In order to run unit tests, just run the following command:
+```shell
+yarn integration-test
+```
 
 ## Smoke tests
 
-- brief description of testing tools
-- brief description of tests made
-- commands necessary to execute tests
-  - list commands step by step
-  - highlight the output with an example when appropriated
-- verify state using wallet repl, storage viewer and agd queries
+#### Launch local chain and client
+
+> % cd agoric-sdk/packages/inter-protocol/scripts  
+> % ./start-local-chain.sh
+
+> % cd agoric-sdk/packages/cosmic-swingset  
+> % make SOLO_COINS='13000000ubld,12345000000000uist,1122000000ibc/toyusdc' scenario2-run-client
+
+#### Submit core-eval
+
+> % cd simple-exchange/  
+> % make build-proposal
+
+Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the Makefile variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively. 
+
+```
+jorgelopes@Jorges-MBP my-simple-exchange % make build-proposal
+rm -rf /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/*
+/Users/jorgelopes/Documents/GitHub/Agoric/agoric-sdk/packages/agoric-cli/bin/agoric run /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
+agoric: run: running /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
+agoric: run: Deploy script will run with Node.js ESM
+creating startSimpleExchange-permit.json
+creating startSimpleExchange.js
+You can now run a governance submission command like:
+  agd tx gov submit-proposal swingset-core-eval startSimpleExchange-permit.json startSimpleExchange.js \
+    --title="Enable <something>" --description="Evaluate startSimpleExchange.js" --deposit=1000000ubld \
+    --gas=auto --gas-adjustment=1.2
+Remember to install bundles before submitting the proposal:
+  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-2650f4c0249bec056ff83866ab0d5aae340e29781ef5544941c1e7f1586b1bbf57c791022ff3c9d9be0d88a9b0dc9884d3fc8fa209c505d085a1117596f52e54.json
+  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-60fe5d5e379113b78f3cfd5a00ff13a25d36e5c6e63c9fecaf9d586f834d8d6d53259bfe499876e3b8fc84d85e02da7e345bf6344868bb2135a69a2d81c70509.json
+```
+
+> % make submit-core-eval
+
+#### Run smoke tests
+
+> % cd simple-exchange/contract/test/smokeTests/  
+> % agoric deploy updateAssetList  
+> % agoric deploy updateReferenceList  
+
+> % ./sellOffer  
+> % ./buyOffer
+
+Note: the sell and buy `offerId` index is set to 0. If you wish to execute any of the scripts multiple times, remember to set the `SELL_INDEX` and/or `BUY_INDEX` to the respective incremental value, for example `export SELL_INDEX=1`
+
+#### Verify order book
+
+1. Agoric Wallet REPL
+    - get instance from agoricNames
+    - get publicFacet
+    - get subscriber
+    - get updated state
+
+2. Storage Viewer
+    - load published children keys
+    - load simpleExchange data
+
 
 ## Swingset tests
 
-- brief description of testing tools
-- brief description of tests made
-- commands necessary to execute tests
-  - list commands step by step
-  - highlight the output with an example when appropriated
+In order to run Swingset tests, just run the following command:
+```shell
+yarn swingset-test
+```
 
 # Contract Deployment
 
