@@ -1,8 +1,8 @@
 # SimpleExchange dApp tutorial
 
-## Introduction and objectives
+## Introduction
 
-This tutorial showcases how to test the simpleExchange contract, how to deploy it on the Agoric devnet, and lastly, how to launch its UI
+This tutorial showcases the dependencies of the simpleExchange contract, the multiple tests that can be done and how to do it, how to build and submit a core-eval on Agoric Devnet, and lastly, how to launch the dApp frontend.
 
 ## Index
 
@@ -20,6 +20,18 @@ This tutorial showcases how to test the simpleExchange contract, how to deploy i
 - Follow the [installing the Agoric SDK](https://docs.agoric.com/guides/getting-started/) guide to install the Agoric Software Development Kit (SDK);
   - Important: instead of using the community-dev branch, you need to check out to the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`
 - Clone the [simpleExchange repository](https://github.com/alexanderem49/simple-exchange) and run `agoric install` in the project root directory;
+
+```bash
+go version # go version go1.20.6 darwin/arm64
+node --version # v18.18.0
+npm --version # 9.8.1
+yarn --version # 1.22.5
+
+# inside agoric-sdk folder
+`git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67`
+yarn install && yarn build
+agoric --version # 0.21.2-u11.0
+```
 
 # Contract Testing
 
@@ -58,13 +70,11 @@ This tutorial showcases how to test the simpleExchange contract, how to deploy i
 
 # Contract Deployment
 
-For this task, we are going to use the following docs
+For this task, we are going to use the following documents
 
-- simpleExchange-proposal: this module consists of one or more BootBehavior functions that take a powers argument,
-  and one function to get a BootstrapManifest that refers to all the BootBehaviors, along with a BootstrapManifestPermit for each.
-- proposalBuilder-script: script that imports the ProposalBuilder that refer to the function from the proposal to get a manifest.
-  This module exports a DeployScriptFunction to call writeCoreProposal for the ProposalBuilder.
-- Makefile: a list of targets that facilitate the process of deploying the contract on local chain or devnet
+- simpleExchange-proposal: this module consists of one or more BootBehavior functions that take a powers argument, and one function to get a BootstrapManifest that refers to all the BootBehaviors, along with a BootstrapManifestPermit for each.  
+- proposalBuilder-script: script that imports the ProposalBuilder that refer to the function from the proposal to get a manifest. This module exports a DeployScriptFunction to call writeCoreProposal for the ProposalBuilder.
+- Makefile: a list of targets that facilitate the process of deploying the contract on local chain or devnet.
 
 1. Open a new terminal and run the following commands to create the contract and manifest bundles, as well as the core proposal and permit files
 
@@ -106,6 +116,8 @@ make install-contract-bundle-dev
 make install-manifest-bundle-dev
 ```
 
+If you wish to analyze the costs associated with your deployments, see the [Agoric Bundle Explorer](https://github.com/Agoric/agoric-sdk/discussions/8416)
+
 3. Submit proposal
 
 ```shell
@@ -114,13 +126,13 @@ make submit-proposal-dev
 
 4. Vote on proposal
 
-Inform the community on the devnet channel on Agoric discord that you plan to submit a proposal, so they can vote on it.
+In order to deploy a contract on devnet, the proposal needs to pass the voting stage. So it is advised to inform the community on the devnet channel on [Agoric discord](todo) in advance, that you plan to submit a proposal, so they can vote on it.
 
 ## Get proposal approved
 
 # Launch UI
 
-1. Update the RPC address and chain ID
+1. Update the RPC address and chain ID accordingly to where the contract was deployed.
 
 At the `ui/src/store/store.js` file, line 5, update the `rpcAddr` and `chainId` passed to the `makeAgoricChainStorageWatcher`.  
 If you wish to run the application on:
