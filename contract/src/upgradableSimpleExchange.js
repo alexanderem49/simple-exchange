@@ -11,8 +11,19 @@ import {
 } from '@agoric/zoe/src/contractSupport';
 
 const prepare = async (zcf, privateArgs, baggage) => {
+  // 
   const { marshaller, storageNode } = privateArgs;
+
+  //Create a zone whose objects persist between Agoric vat upgrades.
   const zone = makeDurableZone(baggage);
+
+  // get the Asset and Price brands and store it in a durable storage
+  const { brands } = zcf.getTerms();
+  const brandsList = zone.mapStore('brandsList');
+  if (!brandsList.has('simpleExchangeBrandsList')) {
+    brandsList.init('simpleExchangeBrandsList', brands);
+  }
+  const { Asset, Price } = brandsList.get('simpleExchangeBrandsList');
 
   // The contract expects proposals for this contract instance
   // should use keywords 'Asset' and 'Price'.
@@ -49,10 +60,19 @@ const prepare = async (zcf, privateArgs, baggage) => {
     return offerList;
   };
 
-  // Return full order book, both buys and sells.
+  // Return a state that includes the brands associeted with the Asset and Price,
+  // as well as the order book, both buys and sells.
   const getOrderBook = () => ({
-    buys: getOffers(buySeatsMap),
-    sells: getOffers(sellSeatsMap),
+    state: {
+      brands: {
+        Asset,
+        Price,
+      },
+      orderBook: {
+        buys: getOffers(buySeatsMap),
+        sells: getOffers(sellSeatsMap),
+      },
+    },
   });
 
   // Update the subscriber state when the order book changes.

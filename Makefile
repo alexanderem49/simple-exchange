@@ -13,8 +13,8 @@ PROPOSAL_BUILDER = ${shell pwd}/contract/src/proposal/proposalBuilder-script.js
 HOME = $(SDK_ROOT)/packages/cosmic-swingset/t1/bootstrap
 FROM = bootstrap
 
-CONTRACT_REF_BUNDLE_ID = @cache/b1-2650f4c0249bec056ff83866ab0d5aae340e29781ef5544941c1e7f1586b1bbf57c791022ff3c9d9be0d88a9b0dc9884d3fc8fa209c505d085a1117596f52e54.json
-MANIFEST_REF_BUNDLE_ID = @cache/b1-60fe5d5e379113b78f3cfd5a00ff13a25d36e5c6e63c9fecaf9d586f834d8d6d53259bfe499876e3b8fc84d85e02da7e345bf6344868bb2135a69a2d81c70509.json
+CONTRACT_REF_BUNDLE_ID = @cache/b1-30c28543275186d8f9301c3f6aa5c84e9279443a448b4471fd560ccf0bc0b08fe41b769f9006ffa775bf157462bb2629c90d70e9c64502cf7ca9f8344f7bbc7e.json
+MANIFEST_REF_BUNDLE_ID = @cache/b1-88585edbf550144ca45b5e0b9f8e63f7652f6a006c585523bdded62fc63ca7df7f00e09a9f961b1596506f3cff9b177b4c2e3742b3f56e4cc80df052244b8314.json
 
 build-proposal:
 	rm -rf ${shell pwd}/cache/*
