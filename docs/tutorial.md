@@ -77,7 +77,7 @@ yarn integration-test
 
 ## Smoke tests
 
-#### Launch local chain and client
+### Launch local chain and client
 
 > % cd agoric-sdk/packages/inter-protocol/scripts  
 > % ./start-local-chain.sh
@@ -85,7 +85,7 @@ yarn integration-test
 > % cd agoric-sdk/packages/cosmic-swingset  
 > % make SOLO_COINS='13000000ubld,12345000000000uist,1122000000ibc/toyusdc' scenario2-run-client
 
-#### Submit core-eval
+### Submit core-eval
 
 > % cd simple-exchange/  
 > % make build-proposal
@@ -111,7 +111,7 @@ Remember to install bundles before submitting the proposal:
 
 > % make submit-core-eval
 
-#### Run smoke tests
+### Run smoke tests
 
 > % cd simple-exchange/contract/test/smokeTests/  
 > % agoric deploy updateAssetList  
@@ -122,7 +122,7 @@ Remember to install bundles before submitting the proposal:
 
 Note: the sell and buy `offerId` index is set to 0. If you wish to execute any of the scripts multiple times, remember to set the `SELL_INDEX` and/or `BUY_INDEX` to the respective incremental value, for example `export SELL_INDEX=1`
 
-#### Verify order book
+### Verify order book
 
 1. Agoric Wallet REPL
     - get instance from agoricNames
