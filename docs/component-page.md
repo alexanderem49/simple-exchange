@@ -1,22 +1,20 @@
-# Simple exchange
+# SimpleExchange
 
-Executing P2P trades of assets on the simple exchange contract.
+## Summary
 
-# Summary
+This component allows users to execute P2P exchanges between a set of two assets on Agoric network.
 
-This component allows users to execute P2P trades of assets on the simple exchange contract on Agoric network.
+## Details
 
-# Details
+The exchange contract was written with simplicity in mind. It holds the order books which is filled when users submit a buy or sell order to the contract, describing what asset they give and what asset they want. The SimpleExchange contract introduces keywords `Asset` and `Price`, which will be assigned to a specific ERTP issuer when the contract is instantiated.
+When a user is building the offer proposal, if he assigns the `Asset` to the `want` keyword, and the `Price` to the `give`, this will be reflected as a `buy order`, and vice-versa for a `sell order`.
 
-The exchange contract was written with simplicity in mind. It holds the order books which is filled when users make an offer to the contract describing what asset they give and what asset they want. Exchange contract introduces keywords `Asset` and `Price`, where `Asset` - what buyer gives to the exchange counterparty and `Price` - what buyer is willing to get from the exchange counterparty. For seller it will be vice versa - `Asset` - what seller gets and `Price` - what seller gives.
+In order to execute the exchange, users have to simply issue offers to the contract with information about what they give and what they want, and provide the respective payment. As soon as that order matches with an existing or new order, the contract will execute the trade and the counterparties will receive their desired assets.
 
-In order to execute the exchange, users have to simply issue offers to the contract with information about what they give and what they want. As soon as user creates an offer that matches one of the existing offers, contract will execute the trade and counterparties will receive their desired assets.
+## Dependencies
 
-# Dependencies
-
-As this contract was written with simplicity in mind, this contract doesn’t have any dependency other that agoric-sdk itself (which depends on go, node, npm and  yarn, check Agoric SDK getting started [here](https://docs.agoric.com/guides/getting-started/#getting-support)). 
-
-Recommended agoric-sdk installation:
+There are some previous considerations to have before instantiating this contract.
+The first one is related to the agoric-sdk version used at the moment of its development. The tag returned by running the command `git describe --tags --always` is `@agoric/cache@0.3.3-u11.0`, so it is advised to check out to the same state when exploring this component and test if any major update is required in order to be implemented at the desired agoric-sdk version.
 
 ```bash
 go version # go version go1.20.6 darwin/arm64
@@ -25,57 +23,56 @@ npm --version # 9.8.1
 yarn --version # 1.22.5
 
 # inside agoric-sdk folder
-git checkout agoric-upgrade-11wf
+`git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67`
 yarn install && yarn build
 agoric --version # 0.21.2-u11.0
 ```
 
-In order to start an instance of the simple exchange contract it does not require any terms, or privateArgs. Only the installation reference and issuer keyword record, which in example described above should be following:
+When the contract is instantiated, the terms should specify the AMM publicFacet, the secondary issuer, the LP token issuer, the central issuer, and the initial boundaries.
+The issuerKeywordRecord should also be specified with Central, Secondary and LpToken, being each one related to his corresponding issuer.
+
+As this contract was written with simplicity in mind, this contract doesn’t have any dependency other that agoric-sdk itself (which depends on go, node, npm and yarn, check Agoric SDK getting started [here](https://docs.agoric.com/guides/getting-started/#getting-support)).
+
+Recommended agoric-sdk installation:
+
+In order to start an instance of the simple exchange contract it does not require any terms, or privateArgs. Only the `installation` reference and the `issuerKeywordRecord`, which in example described above should be following:
 
 ```jsx
 const { publicFacet, instance } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
-  );
+  contractInstallation,
+  harden({
+    Asset: moolaKit.issuer,
+    Price: simoleanKit.issuer,
+  }),
+);
 ```
 
-# Contract Facets
+Note: moolaKit and simoleanKit are two issuerKits created only for testing the simpleExchange contract. They will be referred multiple times in this document.
 
-`creatorFacet` of the contract is empty:
+## Contract Facets
+
+The SimpleExchange contract exports two remotable objects, publicFacet and creatorFacet.
+The creatorFacet has no methods, so it is empty.
+The publicFacet has two methods. The `makeInvitation`, which returns a `Invitation` that should be exercised when making an offer for the exchange. This method will check that the offer proposal shape matches the required shape. If an invitation asset doesn’t match the issuers specified in the issuer keyword record, the seat is immediately exited and error will be returned. The `getNotifier` is a method that returns `NotifierRecord`. It is used to retrieve current order book and get updates when order book state changes.
 
 ```jsx
 const creatorFacet = Far('creatorFacet', {});
 ```
 
-`publicFacet` of the contract contains two methods:
-
 ```jsx
 const publicFacet = Far('publicFacet', {
-    makeInvitation: makeExchangeInvitation,
-    getNotifier: () => notifier,
-  });
+  makeInvitation: makeExchangeInvitation,
+  getNotifier: () => notifier,
+});
 ```
 
-`getNotifier` is a method that returns `NotifierRecord`. It is used to retrieve current order book and get updates when order book state changes.
-
-`makeInvitation` returns an `Invitation` that should be exercised when making an offer for the exchange. This method will check that the offer proposal shape matches the required shape. If an invitation assets doesn’t match the issuers specified in the issuer keyword record, the seat is immediately exited and error will be returned:
-
-```jsx
- return new Error(
-     'The proposal did not match either a buy or sell order.',
- );
-```
-
-# Functionalities
+## Functionalities
 
 ### makeInvitation
 
-When offer is issued, the contract handles it, matches an offer to the existing offers in the order book. The contract will automatically add the order to the buy or sell list. If there is a match, the swap is executed - contract will exit both seats to deliver assets to the counterparties. Otherwise, order will be added to the order book.
+When offer is issued, the contract handles it, matches an offer to the existing offers in the order book. The contract will automatically add the order to the buy or sell list. If there is a match, the swap is executed and the contract will exit both seats to deliver assets to the counterparties. Otherwise, order will be added to the order book.
 
-The invitation will require the following proposal shape:
+The invitation will require the following proposal shape (where `x` and `y` are amounts):
 
 ```jsx
 const proposal = harden({
@@ -84,136 +81,72 @@ const proposal = harden({
 });
 ```
 
-Example: if Alice wants to trade 4 simoleans for 3 moolas and Bob wants to trade 3 moolas for 4 simoleans, they would create the following proposals:
+Example: if Alice wants to trade 4 simoleans for 3 moolas and Bob wants to trade 3 moolas for 4 simoleans, they would create the following proposals and provide the respective payment:
 
 ```jsx
 const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
+  give: { Asset: moola(3n) },
+  want: { Price: simoleans(4n) },
+});
+```
 
-const bobBuyOrderProposal = harden({
-    give: { Price: simoleans(4n) },
-    want: { Asset: moola(3n) }
-  });
+```jsx
+// mint 3 moolas for Alice that she will pay to the counterparty
+const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
+const alicePayments = { Asset: aliceMoolaPayment };
 ```
 
 As soon as Bob issues his offer, contract will match it with the offer issued by Alice and execute the trade.
 
+```jsx
+const bobBuyOrderProposal = harden({
+  give: { Price: simoleans(4n) },
+  want: { Asset: moola(3n) },
+});
+```
+
 See [exchangeOfferHandler](#exchangeofferhandler) for offer handler details.
 
-Returns an `Invitation` for exchange offers:
+### exchangeOfferHandler
+
+The exchangeOfferHandler function holds the logic behind the contract. It is responsible for retrieving proposal from the user seat and verify if what is defined as `want`.
+Then, handler will try to find a counteroffer in the order book that will satisfy an offer. If an offer is found, the swap is then executed and the counteroffer is removed from the order book. Both seats will be exited after assets are successfully transferred. If an error occurs, no assets will be transferred, and both seats will fail.  
+If counteroffer is not found in the order book, the offer will be added to the order book waiting for a counteroffer.  
+The notifier is always updated, reflecting the latest state of the order book.  
 
 ```jsx
-// Alice creates an order to get 4 simoleans for 3 moolas
-const aliceInvitation = await E(publicFacet).makeInvitation();
-const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
+  const exchangeOfferHandler = (seat) => {
+    const { want, give } = seat.getProposal();
 
-// mint 3 moolas for Alice that she will pay to the counterparty
-const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-const alicePayments = { Asset: aliceMoolaPayment };
-
-const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
-  );
+    // A Buy order is an offer that wants Asset and gives Price and vice-versa.
+    // Based on the order, the contract will try to execute an exchange with the
+    // respective counterOffers list.
+    if (want.Asset) {
+      swapIfCanTradeAndUpdateBook(sellSeats, buySeats, seat);
+      return 'Order Added';
+    } else if (give.Asset) {
+      swapIfCanTradeAndUpdateBook(buySeats, sellSeats, seat);
+      return 'Order Added';
+    }
+  };
 ```
 
 ### getNotifier
 
-Returns a `NotifierRecord`. Can be used to retrieve the order book records and get updates when order book state changes.
-
-Getting buys and sells from the order book: 
+Returns a `NotifierRecord` that can be used to retrieve the order book records and get updates when order book state changes.
 
 ```jsx
 const notifier = await E(publicFacet).getNotifier();
 let {
-    value: { buys, sells },
-  } = await E(notifier).getUpdateSince();
+  value: { buys, sells },
+} = await E(notifier).getUpdateSince();
 ```
 
-### exchangeOfferHandler
+## Usage and Integration
 
-Handler will first retrieve proposal info from the seat. If `want.Asset` is specified, the proposal is considered as a buy offer, otherwise if `give.Asset` is specified, it is considered as a sell offer. Otherwise, error will be thrown.
+A step-by-step guide on how the contract can be used and deployed, along with the dependencies that must be installed can be found in the [Tutorial](todo) file in the project repository.
+There is also an extensive list of tests is also a good way to understand and showcase the multiple scenarios and behaviors expected by the simpleExchange contract.
 
-Then, handler will try to find a counteroffer in the order book that will satisfy an offer. If an offer is found, the swap is then executed and the counteroffer is removed from the order book. Both seats will be exited after assets are sucessfuly transferred. If an error occurs, no assets will be transferred, and both seats will fail.
-
-If counteroffer is not found in the order book, the offer will be added to the order book waiting for a counteroffer.
-
-The notifier is always updated, reflecting the latest state of the order book.
-
-# Usage and Integration
-
-Here is the full flow of the exchange of assets between Alice and Bob:
-
-```jsx
-  // Initialize zoe
-  const { zoe } = await setUpZoeForTest(() => { });
-
-  // Mock assets
-  const moolaKit = makeIssuerKit('moola');
-  const simoleanKit = makeIssuerKit('simoleans');
-
-  const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
-  
-  const moola = makeSimpleMake(moolaKit.brand);
-  const simoleans = makeSimpleMake(simoleanKit.brand);
-
-  // Create an instance of the contract
-  const filename = new URL(import.meta.url).pathname;
-  const dirname = path.dirname(filename);
-  const contractPath = `${dirname}/../src/simpleExchange.js`;
-  const contractBundle = await bundleSource(contractPath);
-  const contractInstallation = E(zoe).install(contractBundle);
-
-  const { publicFacet, instance } = await E(zoe).startInstance(
-    contractInstallation,
-    harden({
-      Asset: moolaKit.issuer,
-      Price: simoleanKit.issuer,
-    }),
-  );
-
-  // Alice makes a sell order
-  const aliceInvitation = await E(publicFacet).makeInvitation();
-
-  const aliceSellOrderProposal = harden({
-    give: { Asset: moola(3n) },
-    want: { Price: simoleans(4n) },
-  });
-
-  const aliceMoolaPayment = moolaKit.mint.mintPayment(moola(3n));
-  const alicePayments = { Asset: aliceMoolaPayment };
-
-  const aliceSeat = await E(zoe).offer(
-    aliceInvitation,
-    aliceSellOrderProposal,
-    alicePayments,
-  );
-  await E(aliceSeat).getOfferResult(); // => 'Order Added'
-
-  // Bob makes a buy order
-  const bobInvitation = await E(publicFacet).makeInvitation();
-  const bobBuyOrderProposal = harden({
-    want: { Asset: moola(3n) },
-    give: { Price: simoleans(4n) },
-  });
-
-  const bobSimoleansPayment = simoleanKit.mint.mintPayment(simoleans(4n));
-  const bobPayments = { Price: bobSimoleansPayment };
-
-  const bobSeat = await E(zoe).offer(
-    bobInvitation,
-    bobBuyOrderProposal,
-    bobPayments,
-  );
-  await E(bobSeat).getOfferResult(); // => 'Order Added'
-```
-
-# Link
+## Link
 
 https://github.com/alexanderem49/simple-exchange
