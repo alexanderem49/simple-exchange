@@ -17,7 +17,7 @@
 ## Submit core-eval
 
 > % cd simple-exchange/  
-> % make build-proposal
+> % make bundle-contract
 
 Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the Makefile variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
 
