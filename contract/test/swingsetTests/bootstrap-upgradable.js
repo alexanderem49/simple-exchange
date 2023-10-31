@@ -166,15 +166,16 @@ export const buildRootObject = async () => {
       assertions.assertOfferResult(offerResult, 'Order Added');
     },
 
-    assertOrderBook: async (expectedBuys, expectedSells) => {
-      const orderBook = await E(subscriber).getUpdateSince();
-      assertions.assertOrderBook(orderBook, expectedBuys, expectedSells);
+    assertState: async (expectedBuys, expectedSells) => {
+      const stateBook = await E(subscriber).getUpdateSince();
+
+      assertions.assertState(stateBook, expectedBuys, expectedSells, assets.moolaKit.brand, assets.simoleanKit.brand);
     },
 
     assertStateLength: async (expectedBuys, expectedSells) => {
-      const orderBook = await E(subscriber).getUpdateSince();
-      console.log(orderBook);
-      assertions.assertStateLength(orderBook, expectedBuys, expectedSells);
+      const stateBook = await E(subscriber).getUpdateSince();
+      console.log(stateBook);
+      assertions.assertStateLength(stateBook, expectedBuys, expectedSells);
     },
   });
 };
