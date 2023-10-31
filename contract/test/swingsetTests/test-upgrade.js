@@ -87,7 +87,7 @@ test('null-upgrade-orderBook', async (t) => {
   t.log('run controller');
   await controller.run();
 
-  const [assertOrderBook] = await run(controller, 'assertOrderBook', [[], []]);
+  const [assertOrderBook] = await run(controller, 'assertState', [[], []]);
   t.is(assertOrderBook, 'fulfilled');
 
   let [assertStateLength] = await run(
