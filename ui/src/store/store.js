@@ -17,11 +17,15 @@ export const useStore = create((set, get) => ({
   vbankAssets: [],
   buyOrders: [],
   sellOrders: [],
-  setOrders: (simpleExchange) => {
+  setSimpleExchangeStates: (simpleExchange) => {
+    const assetBrand = simpleExchange.state.brands.Asset;
+    const priceBrand = simpleExchange.state.brands.Price;
+
     const buyOrders = [...simpleExchange.state.orderBook.buys];
     const sellOrders = [...simpleExchange.state.orderBook.sells];
-    console.log('orderBook: ', simpleExchange.state.orderBook);
-    set({ buyOrders, sellOrders });
+    console.log('simpleExchange: ', simpleExchange);
+
+    set({ buyOrders, sellOrders, assetBrand, priceBrand });
   },
   notifyUser: (severity, message) => {
     set(() => ({
@@ -33,36 +37,16 @@ export const useStore = create((set, get) => ({
       notifierState: { open: false, severity: '', message: '' }
     }));
   },
-  setExchangedBrands: (vbankAssets) => {
-    const assetBrand = {};
-    const priceBrand = {};
+  setVBank: (vbankAssets) => {
     console.log('vbankAssets: ', vbankAssets);
-    vbankAssets.forEach(([denom, assetInfo]) => {
-      if (denom === 'ubld') {
-        assetBrand[assetInfo.issuerName] = assetInfo;
-      } else if (denom === 'uist') {
-        priceBrand[assetInfo.issuerName] = assetInfo;
-      }
-    });
+    if (!vbankAssets) return;
+    const brandToDisplayInfo = {};
+    [...vbankAssets].forEach(([, { brand, displayInfo }]) => (brandToDisplayInfo[brand] = displayInfo));
 
-    set({ assetBrand, priceBrand });
+    set(() => ({ brandToDisplayInfo, vbankAssets }));
   },
   getDisplayInfo: (brand) => {
-    const { assetBrand, priceBrand, vbankAssets } = get();
-
-    if (assetBrand[brand]) {
-      return assetBrand[brand];
-    }
-
-    if (priceBrand[brand]) {
-      return priceBrand[brand];
-    }
-
-    if (!vbankAssets || !Array.isArray(vbankAssets)) {
-      return null;
-    }
-
-    const asset = vbankAssets.find((asset) => asset[1]?.issuerName === brand);
-    return asset ? asset[1] : null;
+    const { brandToDisplayInfo } = get();
+    return brandToDisplayInfo[brand];
   }
 }));

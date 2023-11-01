@@ -8,12 +8,14 @@ export default function ExchangeInterface() {
   const [outputValue, setOutputValue] = useState('');
   const [assetLabel, setAssetLabel] = useState('Asset:');
   const [priceLabel, setPriceLabel] = useState('Price:');
-  const [assetBrand, setAssetBrand] = useState('BLD');
-  const [priceBrand, setPriceBrand] = useState('IST');
+  const [assetBrandName, setAssetBrandName] = useState('BLD');
+  const [priceBrandName, setPriceBrandName] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
   const wallet = useStore((state) => state.wallet);
   const notifyUser = useStore((state) => state.notifyUser);
-
+  const assetBrand = useStore((state) => state.assetBrand);
+  const priceBrand = useStore((state) => state.assetBrand);
+  const getDisplayInfo = useStore((state) => state.getDisplayInfo);
   const isBuyOrder = assetLabel === 'Price:';
 
   const vbankAssets = useStore((state) => state.vbankAssets);
@@ -25,14 +27,12 @@ export default function ExchangeInterface() {
     }
   }, [vbankAssets]);
 
-  const getDisplayInfo = useStore((state) => state.getDisplayInfo);
-
-  const parseUserInput = (brandName, str) => {
-    const displayInfo = getDisplayInfo(brandName);
+  const parseUserInput = (brand, str) => {
+    const displayInfo = getDisplayInfo(brand);
 
     if (!displayInfo) return str;
 
-    const { assetKind, decimalPlaces, brand } = displayInfo;
+    const { assetKind, decimalPlaces } = displayInfo;
 
     return parseAsAmount(str, brand, assetKind, decimalPlaces);
   };
@@ -72,13 +72,15 @@ export default function ExchangeInterface() {
     );
   };
 
-  const getFormattedInputValue = (brand, rawValue) => {
+  const displayAmount = (amount) => {
+    const { brand, value } = amount;
+    const { getDisplayInfo } = useStore.getState();
     const displayInfo = getDisplayInfo(brand);
 
-    if (!displayInfo || !rawValue) return rawValue;
+    if (!displayInfo) return '';
+    const parsedValue = parseUserInput(brand, value).value;
 
     const { assetKind, decimalPlaces } = displayInfo;
-    const parsedValue = parseAsAmount(rawValue, brand, assetKind, decimalPlaces).value;
 
     return stringifyValue(parsedValue, assetKind, decimalPlaces);
   };
@@ -86,12 +88,12 @@ export default function ExchangeInterface() {
   const handleArrowClick = () => {
     setIsOpen(!isOpen);
     const tempLabel = assetLabel;
-    const tempValue = assetBrand;
+    const tempValue = assetBrandName;
     const tempInputValue = inputValue;
     setAssetLabel(priceLabel);
     setPriceLabel(tempLabel);
-    setAssetBrand(priceBrand);
-    setPriceBrand(tempValue);
+    setAssetBrandName(priceBrandName);
+    setPriceBrandName(tempValue);
     setInputValue(outputValue);
     setOutputValue(tempInputValue);
   };
@@ -102,13 +104,13 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={getFormattedInputValue(assetBrand, inputValue)}
+          value={displayAmount({ brand: assetBrand, value: inputValue })}
           onChange={(e) => handleInputChange(e, setInputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {assetLabel} {assetBrand}
+          {assetLabel} {assetBrandName}
         </span>
       </div>
       <div className="flex items-center mb-3 justify-center w-full mr-28">
@@ -135,13 +137,13 @@ export default function ExchangeInterface() {
       <div className="flex items-center w-full space-x-2">
         <input
           type="text"
-          value={getFormattedInputValue(priceBrand, outputValue)}
+          value={displayAmount({ brand: priceBrand, value: outputValue })}
           onChange={(e) => handleInputChange(e, setOutputValue)}
           className="p-2 w-3/5 border border-gray-300 rounded"
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {priceLabel} {priceBrand}
+          {priceLabel} {priceBrandName}
         </span>
       </div>
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">
