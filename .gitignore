@@ -6,5 +6,13 @@ _agstate/yarn-links/
 .parcel-cache/
 ui/.cache/
 ui/dist/
+cache/
+contract/bundles/
+startSimpleExchange-permit.json
+startSimpleExchange.js
+contract/test/smokeTests/assetList.js
+contract/test/smokeTests/referenceList.js
 
 .DS_Store
+
+bundle-walletFactory*

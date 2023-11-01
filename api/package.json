@@ -1,5 +1,5 @@
 {
-  "name": "my-simple-exchange-api",
+  "name": "simple-exchange-api",
   "private": true,
   "version": "0.1.0",
   "description": "Agoric Dapp web server handler",

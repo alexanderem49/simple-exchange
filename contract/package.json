@@ -1,5 +1,5 @@
 {
-  "name": "my-simple-exchange-contract",
+  "name": "simple-exchange-contract",
   "version": "0.1.0",
   "private": true,
   "description": "Contract for the Agoric Dapp",
@@ -29,11 +29,16 @@
     "@agoric/deploy-script-support": "beta",
     "@agoric/ertp": "beta",
     "@endo/eventual-send": "^0.14.8",
-    "@endo/init": "^0.5.37",
+    "@endo/far": "^0.2.14",
+    "@endo/init": "^0.5.56",
     "@endo/marshal": "^0.6.9",
     "@agoric/notifier": "beta",
     "@agoric/store": "beta",
-    "@agoric/zoe": "beta"
+    "@agoric/zoe": "beta",
+    "@agoric/vats": "0.15.1",
+    "@agoric/vat-data": "beta",
+    "@agoric/internal": "0.2.1",
+    "@agoric/zone": "^0.2.2"
   },
   "ava": {
     "files": [
