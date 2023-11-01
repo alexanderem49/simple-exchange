@@ -18,10 +18,9 @@ export const useStore = create((set, get) => ({
   buyOrders: [],
   sellOrders: [],
   setOrders: (simpleExchange) => {
-    const buyOrders = [...simpleExchange.buys];
-    const sellOrders = [...simpleExchange.sells];
-    console.log('buyOrders: ', buyOrders);
-    console.log('sellOrders: ', sellOrders);
+    const buyOrders = [...simpleExchange.state.orderBook.buys];
+    const sellOrders = [...simpleExchange.state.orderBook.sells];
+    console.log('orderBook: ', simpleExchange.state.orderBook);
     set({ buyOrders, sellOrders });
   },
   notifyUser: (severity, message) => {
@@ -29,10 +28,15 @@ export const useStore = create((set, get) => ({
       notifierState: { open: true, severity, message }
     }));
   },
+  closeNotifier: () => {
+    set(() => ({
+      notifierState: { open: false, severity: '', message: '' }
+    }));
+  },
   setExchangedBrands: (vbankAssets) => {
     const assetBrand = {};
     const priceBrand = {};
-
+    console.log('vbankAssets: ', vbankAssets);
     vbankAssets.forEach(([denom, assetInfo]) => {
       if (denom === 'ubld') {
         assetBrand[assetInfo.issuerName] = assetInfo;
@@ -43,7 +47,6 @@ export const useStore = create((set, get) => ({
 
     set({ assetBrand, priceBrand });
   },
-  setVbankAssets: (assets) => set({ vbankAssets: assets }),
   getDisplayInfo: (brand) => {
     const { assetBrand, priceBrand, vbankAssets } = get();
 

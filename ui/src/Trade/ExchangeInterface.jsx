@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
 import { XCircleIcon } from '@heroicons/react/24/outline/index.js';
-import { buyOffer, makeGenericOnStatusUpdate } from '../utils/makeOrder.js';
+import { buyOffer, makeGenericOnStatusUpdate, sellOffer } from '../utils/makeOrder.js';
 
 export default function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
   const [outputValue, setOutputValue] = useState('');
-  const [firstLabel, setFirstLabel] = useState('Asset:');
-  const [secondLabel, setSecondLabel] = useState('Price:');
+  const [assetLabel, setAssetLabel] = useState('Asset:');
+  const [priceLabel, setPriceLabel] = useState('Price:');
   const [assetBrand, setAssetBrand] = useState('BLD');
   const [priceBrand, setPriceBrand] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +16,7 @@ export default function ExchangeInterface() {
   const wallet = useStore((state) => state.wallet);
   const notifyUser = useStore((state) => state.notifyUser);
 
-  const isBuyOrder = firstLabel === 'Price:';
+  const isBuyOrder = assetLabel === 'Price:';
 
   const vbankAssets = useStore((state) => state.vbankAssets);
   const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser);
@@ -47,7 +47,6 @@ export default function ExchangeInterface() {
     let value = ev.target.value;
 
     const formattedValue = value.replace(/[^0-9.]/g, '').replace(/(\..*?)\./g, '$1');
-
     setFieldValue(formattedValue);
   };
 
@@ -63,7 +62,12 @@ export default function ExchangeInterface() {
       return;
     }
 
-    const offerSpec = buyOffer(parsedInput, parsedOutput);
+    let offerSpec;
+    if (isBuyOrder) {
+      offerSpec = buyOffer(parsedInput, parsedOutput);
+    } else {
+      offerSpec = sellOffer(parsedInput, parsedOutput);
+    }
 
     void wallet.makeOffer(
       offerSpec.invitationSpec,
@@ -72,9 +76,6 @@ export default function ExchangeInterface() {
       onStatusChange,
       offerSpec.id
     );
-
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
   };
 
   const getFormattedInputValue = (brand, rawValue) => {
@@ -84,18 +85,17 @@ export default function ExchangeInterface() {
 
     const { assetKind, decimalPlaces } = displayInfo;
     const parsedValue = parseAsAmount(rawValue, brand, assetKind, decimalPlaces).value;
-    console.log('parsedValue: ', parsedValue);
 
     return stringifyValue(parsedValue, assetKind, decimalPlaces);
   };
 
   const handleArrowClick = () => {
     setIsOpen(!isOpen);
-    const tempLabel = firstLabel;
+    const tempLabel = assetLabel;
     const tempValue = assetBrand;
     const tempInputValue = inputValue;
-    setFirstLabel(secondLabel);
-    setSecondLabel(tempLabel);
+    setAssetLabel(priceLabel);
+    setPriceLabel(tempLabel);
     setAssetBrand(priceBrand);
     setPriceBrand(tempValue);
     setInputValue(outputValue);
@@ -114,7 +114,7 @@ export default function ExchangeInterface() {
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {firstLabel} {assetBrand}
+          {assetLabel} {assetBrand}
         </span>
       </div>
       <div className="flex items-center mb-3 justify-center w-full mr-28">
@@ -147,7 +147,7 @@ export default function ExchangeInterface() {
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {secondLabel} {priceBrand}
+          {priceLabel} {priceBrand}
         </span>
       </div>
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">

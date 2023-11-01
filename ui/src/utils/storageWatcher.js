@@ -2,14 +2,13 @@ import { useStore } from '../store/store.js';
 import { AgoricChainStoragePathKind } from '@agoric/rpc';
 
 const makeStorageWatcher = () => {
-  const { watcher, wallet, registerRentals, setExchangedBrands, setOrders } = useStore.getState();
+  const { watcher, wallet, setExchangedBrands, setOrders } = useStore.getState();
 
   const watchSmartWallet = () => {
     watcher.watchLatest(
       [AgoricChainStoragePathKind.Data, `published.wallet.${wallet.address}.current`],
       (smartWalletData) => {
         console.log('SmartWallet Update', smartWalletData);
-        registerRentals(smartWalletData.offerToPublicSubscriberPaths);
         useStore.setState({
           smartWalletPurses: smartWalletData.purses
         });

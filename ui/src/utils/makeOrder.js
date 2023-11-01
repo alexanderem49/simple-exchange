@@ -39,7 +39,7 @@ harden(sellOffer);
 
 export const makeGenericOnStatusUpdate = (snackBarUpdater) => {
   const onStatusChange = (args) => {
-    console.log({ args });
+    console.log('args: ', { args });
     const { status, data } = args;
 
     if (status === 'error') {

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import NavBar from './NavBar/NavBar.jsx';
-import Trade from './Trade/Trade.jsx';
 import { makeStorageWatcher } from './utils/storageWatcher';
 import { useStore } from './store/store.js';
 import ErrorBoundary from './ErrorBoundary/ErrorBoundary.jsx';
+import NavBar from './NavBar/NavBar.jsx';
+import Trade from './Trade/Trade.jsx';
+import { CustomizedSnackbars as UserNotifier } from './UserNotifier/UserNotifier.jsx';
 
 function App() {
   const [hash, setHash] = useState(window.location.hash);
@@ -32,9 +33,8 @@ function App() {
       <div>
         <NavBar />
         {hash === '#trade' && <Trade />}
-        {/*{hash === "#about" && <About />}*/}
-        {/*{hash === "#contact" && <Contact />}*/}
       </div>
+      <UserNotifier />
     </ErrorBoundary>
   );
 }

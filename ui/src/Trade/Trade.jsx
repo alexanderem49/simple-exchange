@@ -45,13 +45,7 @@ function Trade() {
             onClick={() => setActiveTab('all-orders')}
             className={`px-4 py-2 ${activeTab === 'all-orders' ? 'underline' : ''}`}
           >
-            All Orders
-          </button>
-          <button
-            onClick={() => setActiveTab('live-orders')}
-            className={`px-4 py-2 ${activeTab === 'live-orders' ? 'underline' : ''}`}
-          >
-            Live Orders
+            Order Book
           </button>
         </div>
         <div className="flex space-x-4">
