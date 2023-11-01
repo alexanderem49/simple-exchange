@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
-import { XCircleIcon } from '@heroicons/react/24/outline/index.js';
 import { buyOffer, makeGenericOnStatusUpdate, sellOffer } from '../utils/makeOrder.js';
 
 export default function ExchangeInterface() {
@@ -12,7 +11,6 @@ export default function ExchangeInterface() {
   const [assetBrand, setAssetBrand] = useState('BLD');
   const [priceBrand, setPriceBrand] = useState('IST');
   const [isOpen, setIsOpen] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
   const wallet = useStore((state) => state.wallet);
   const notifyUser = useStore((state) => state.notifyUser);
 
@@ -20,10 +18,6 @@ export default function ExchangeInterface() {
 
   const vbankAssets = useStore((state) => state.vbankAssets);
   const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser);
-
-  const closeNotification = () => {
-    setShowNotification(false);
-  };
 
   useEffect(() => {
     if (vbankAssets.length > 0) {
@@ -153,17 +147,6 @@ export default function ExchangeInterface() {
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">
         Make Order
       </button>
-      {showNotification && (
-        <div className="fixed bottom-3.5 left-3 mb-20 ml-6 p-2 bg-green-500 text-white rounded shadow-lg flex items-center space-x-2 transition-all duration-400 ease-in-out">
-          <span>Order Accepted</span>
-          <button
-            onClick={closeNotification}
-            className="p-1 rounded hover:bg-green-600 transition-colors duration-300 ease-in-out"
-          >
-            <XCircleIcon className="h-5 w-5 text-white" />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
