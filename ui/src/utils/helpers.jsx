@@ -1,3 +1,4 @@
+import { stringifyValue } from '@agoric/ui-components';
 export const sellMockData = [
   { date: '2022-11-02', status: 'Completed', nftName: 'CryptoPunk' },
   { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' }
@@ -28,4 +29,15 @@ export function getStatusChip(status) {
   }
 
   return <span className={`${bgColor} text-white py-1 px-2 rounded-full text-xs`}>{status}</span>;
+}
+
+export function extractOrderDetail(order, getDisplayInfo) {
+  const orderType = Object.keys(order)[0];
+  const { value, brand } = order[orderType];
+  const { assetKind, decimalPlaces } = getDisplayInfo(brand);
+
+  const valueString = stringifyValue(value, assetKind, decimalPlaces);
+  const currency = orderType === 'Price' ? 'IST' : 'BLD';
+
+  return `${valueString} ${currency}`;
 }

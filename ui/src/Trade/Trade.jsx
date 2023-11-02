@@ -1,25 +1,39 @@
 import ExchangeInterface from './ExchangeInterface';
 import { useState } from 'react';
-import { buyMockData, getStatusChip, sellMockData } from '../utils/helpers.jsx';
+import { extractOrderDetail } from '../utils/helpers.jsx';
+import { useStore } from '../store/store.js';
 
 function Trade() {
   const [activeTab, setActiveTab] = useState('all-orders');
+  const buyOrders = useStore((state) => state.buyOrders);
+  const sellOrders = useStore((state) => state.sellOrders);
+  const { getDisplayInfo } = useStore.getState();
+
+  const buyOrderData = buyOrders.map((buyOrder) => ({
+    give: extractOrderDetail(buyOrder.give, getDisplayInfo),
+    want: extractOrderDetail(buyOrder.want, getDisplayInfo)
+  }));
+
+  const sellOrderData = sellOrders.map((sellOrder) => ({
+    give: extractOrderDetail(sellOrder.give, getDisplayInfo),
+    want: extractOrderDetail(sellOrder.want, getDisplayInfo)
+  }));
+
+  console.log('buyOrderData ->: ', buyOrderData);
 
   const renderTableContent = (data) => (
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
       <thead>
         <tr className="text-left">
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Date</th>
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Status</th>
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">NFT Name</th>
+          <th className="py-2 px-4 border-b border-gray-200 text-sm">Give (Value - Brand)</th>
+          <th className="py-2 px-4 border-b border-gray-200 text-sm">Want (Value - Brand)</th>
         </tr>
       </thead>
       <tbody>
         {data.map((item, index) => (
           <tr key={index}>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.date}</td>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{getStatusChip(item.status)}</td>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.nftName}</td>
+            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.give}</td>
+            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.want}</td>
           </tr>
         ))}
       </tbody>
@@ -43,22 +57,22 @@ function Trade() {
         <div className="mb-4">
           <button
             onClick={() => setActiveTab('all-orders')}
-            className={`px-4 py-2 ${activeTab === 'all-orders' ? 'underline' : ''}`}
+            className={` py-2 ${activeTab === 'all-orders' ? 'underline' : ''}`}
           >
             Order Book
           </button>
         </div>
         <div className="flex space-x-4">
-          {sellMockData.length === 0 && buyMockData.length === 0 ? (
+          {sellOrderData.length === 0 && buyOrderData.length === 0 ? (
             <div className="w-full">{renderNoDataContent()}</div>
           ) : (
             <>
               <div className="flex flex-col w-1/2 space-y-4">
-                {sellMockData.length > 0 ? (
+                {sellOrderData.length > 0 ? (
                   <>
                     <h2 className="text-lg font-bold">Sell</h2>
                     <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                      {renderTableContent(sellMockData)}
+                      {renderTableContent(sellOrderData)}
                     </div>
                   </>
                 ) : (
@@ -66,11 +80,11 @@ function Trade() {
                 )}
               </div>
               <div className="flex flex-col w-1/2 space-y-4">
-                {buyMockData.length > 0 ? (
+                {buyOrderData.length > 0 ? (
                   <>
                     <h2 className="text-lg font-bold">Buy</h2>
                     <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                      {renderTableContent(buyMockData)}
+                      {renderTableContent(buyOrderData)}
                     </div>
                   </>
                 ) : (
