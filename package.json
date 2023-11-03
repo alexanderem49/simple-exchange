@@ -33,7 +33,9 @@
     "lint": "yarn workspaces run lint-fix",
     "lint-check": "yarn workspaces run lint-check",
     "test": "yarn workspaces run test",
-    "integration-test": "yarn ava",
+    "integration-test": "cd contract && yarn test test/integrationTests",
+    "unit-test": "cd contract && yarn test test/unitTests",
+    "swingset-test": "cd contract && yarn test test/swingsetTests",
     "build": "yarn workspaces run build"
   },
   "dependencies": {

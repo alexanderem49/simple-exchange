@@ -28,9 +28,6 @@ yarn install && yarn build
 agoric --version # 0.21.2-u11.0
 ```
 
-When the contract is instantiated, the terms should specify the AMM publicFacet, the secondary issuer, the LP token issuer, the central issuer, and the initial boundaries.
-The issuerKeywordRecord should also be specified with Central, Secondary and LpToken, being each one related to his corresponding issuer.
-
 As this contract was written with simplicity in mind, this contract doesn’t have any dependency other that agoric-sdk itself (which depends on go, node, npm and yarn, check Agoric SDK getting started [here](https://docs.agoric.com/guides/getting-started/#getting-support)).
 
 In order to start an instance of the simple exchange contract it does not require any privateArgs. Only the `installation` reference and the `issuerKeywordRecord`, which in example described above should be following:
