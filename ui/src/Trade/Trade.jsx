@@ -7,7 +7,7 @@ function Trade() {
   const [activeTab, setActiveTab] = useState('all-orders');
   const buyOrders = useStore((state) => state.buyOrders);
   const sellOrders = useStore((state) => state.sellOrders);
-  const { getDisplayInfo } = useStore.getState();
+  const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
   const buyOrderData = buyOrders.map((buyOrder) => ({
     give: extractOrderDetail(buyOrder.give, getDisplayInfo),
@@ -25,8 +25,8 @@ function Trade() {
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
       <thead>
         <tr className="text-left">
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Give (Value - Brand)</th>
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Want (Value - Brand)</th>
+          <th className="py-2 px-4 border-b border-gray-200 text-sm">Give</th>
+          <th className="py-2 px-4 border-b border-gray-200 text-sm">Want</th>
         </tr>
       </thead>
       <tbody>
@@ -41,7 +41,7 @@ function Trade() {
   );
 
   const renderNoDataContent = () => (
-    <div className="p-4">
+    <div className="mt-11">
       <div className="max-w-sm rounded overflow-hidden shadow-lg bg-white p-4">
         <div className="font-bold text-xl mb-2">No Data Available</div>
         <p className="text-gray-700 text-base">
