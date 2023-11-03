@@ -5,7 +5,6 @@ import { makeScalarMapStore } from '@agoric/store';
 import { makeDefaultTestContext } from '@agoric/smart-wallet/test/contexts.js';
 import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
 import { buildRootObject as buildBankVatRoot } from '@agoric/vats/src/vat-bank.js';
-import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
 import {
   makeMockTestSpace,
   headValue,
@@ -24,7 +23,7 @@ test.before(async (t) => {
     const bankManager = E(
       buildBankVatRoot(undefined, undefined, baggage),
     ).makeBankManager(noBridge);
-    const noop = () => { };
+    const noop = () => {};
     const space0 = await makeMockTestSpace(noop);
     space0.produce.bankManager.reset();
     space0.produce.bankManager.resolve(bankManager);
@@ -32,31 +31,19 @@ test.before(async (t) => {
   };
 
   const assets = setupAssets();
-  const timer = buildManualTimer(t.log);
-
   const defaultTestContext = await makeDefaultTestContext(t, withBankManager);
-
-  const {
-    consume: { zoe, agoricNames },
-  } = defaultTestContext;
-
-  const walletAgoricNames = agoricNames;
 
   t.context = {
     ...defaultTestContext,
-    zoe,
-    timer,
-    walletAgoricNames,
     ...assets,
   };
 });
 
 test('test trade', async (t) => {
   const {
-    zoe,
     moolaKit,
     simoleanKit,
-    consume: { agoricNamesAdmin, agoricNames },
+    consume: { zoe, agoricNamesAdmin },
   } = t.context;
 
   // Create smart wallets for the seller and buyer
@@ -191,6 +178,4 @@ test('test trade', async (t) => {
   await assertAssetBalance(sellerSmartWallet, simoleansAmount);
   await assertAssetBalance(buyerSmartWallet, moolaAmount);
   await assertAssetBalance(buyerSmartWallet, simoleansZeroAmount);
-
-  t.pass();
 });
