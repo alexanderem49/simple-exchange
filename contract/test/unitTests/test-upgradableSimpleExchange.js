@@ -637,3 +637,114 @@ test('make offer with misplaced issuers', async (t) => {
   const offerResult = await E(seat).getOfferResult();
   assertions.assertOfferResult(offerResult, new Error('Brand mismatch'));
 });
+
+test("make trade with surplus assets in Alice's payout", async (t) => {
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
+
+  // Setup the contract
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+
+  const subscriber = await E(publicFacet).getSubscriber();
+  let state = await E(subscriber).getUpdateSince();
+
+  let expectedBuys = [];
+  let expectedSells = [];
+  const expectedAsset = moolaKit.brand;
+  const expectedPrice = simoleanKit.brand;
+  // The order book should be empty
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice
+  )
+
+  // Alice gives 6 moolas and Bob wants 3 moolas. Alice should retain 3 moolas
+  const aliceMoolaGiveValue = 6n;
+  const aliceSimoleanWantValue = 4n;
+  
+  const bobSimoleanGiveValue = 4n;
+  const bobMoolaWantValue = 3n;
+
+  // Alice makes a sell offer
+  const aliceInvitation = await E(publicFacet).makeInvitation();
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+    assets,
+    aliceMoolaGiveValue,
+    aliceSimoleanWantValue,
+  );
+
+  // Alice executes the offer
+  const aliceSeat = await E(zoe).offer(
+    aliceInvitation,
+    sellOrderProposal,
+    sellPayment,
+  );
+  await eventLoopIteration();
+
+  // Assert that the offer was added successfully
+  const offerResult = await E(aliceSeat).getOfferResult();
+  assertions.assertOfferResult(offerResult, 'Order Added');
+
+  // Assert that the order book was updated and now contains the Alice sell offer
+  expectedBuys = [];
+  expectedSells = [sellOrderProposal];
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
+
+  // Bob makes a buy offer
+  const bobInvitation = await E(publicFacet).makeInvitation();
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(
+    assets,
+    bobMoolaWantValue,
+    bobSimoleanGiveValue,
+  );
+
+  // Bob executes the offer
+  const bobSeat = await E(zoe).offer(
+    bobInvitation,
+    buyOrderProposal,
+    buyPayment,
+  );
+  await eventLoopIteration();
+
+  // Assert that the offer was added successfully
+  const bobOfferResult = await E(bobSeat).getOfferResult();
+  assertions.assertOfferResult(bobOfferResult, 'Order Added');
+
+  expectedBuys = [];
+  expectedSells = [];
+  // As the trade is made, the order book should be cleared
+  state = await E(subscriber).getUpdateSince();
+  assertions.assertState(
+    state,
+    expectedBuys,
+    expectedSells,
+    expectedAsset,
+    expectedPrice,
+  );
+
+  // Assert assets are swapped
+  const bobPayout = await E(bobSeat).getPayout("Asset");
+  const alicePayout = await E(aliceSeat).getPayout("Price");
+
+  const amountMoola = await E(moolaKit.issuer).getAmountOf(bobPayout);
+  const amountSimolean = await E(simoleanKit.issuer).getAmountOf(alicePayout);
+
+  assertions.assertPayoutAmount(amountMoola.value, bobMoolaWantValue);
+  assertions.assertPayoutAmount(amountSimolean.value, aliceSimoleanWantValue);
+});
