@@ -8,7 +8,7 @@ import { setupUpgradableSimpleExchange, setupAssets } from '../tools/setup.js';
 import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
 
 test.beforeEach(async (t) => {
-  const { zoe } = await setUpZoeForTest(() => {});
+  const { zoe } = await setUpZoeForTest(() => { });
   const assets = setupAssets();
 
   const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
@@ -593,4 +593,47 @@ test('make offer with NFT', async (t) => {
 
   assertions.assertPayoutAmount(amountMoola.value, moolaValue);
   assertions.assertPayoutAmount(amountSimolean.value, simoleanValue);
+});
+
+test('make offer with misplaced issuers', async (t) => {
+  const { zoe, assets } = t.context;
+  const { moolaKit, simoleanKit } = assets;
+  const assertions = makeSimpleExchangeAssertions(t);
+
+  // Setup the contract
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
+
+  const issuers = await E(zoe).getIssuers(instance);
+  assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
+  assertions.assertIssuer(issuers.Price, simoleanKit.issuer);
+  assertions.assertNotIssuer(issuers.Asset, simoleanKit.issuer);
+  assertions.assertNotIssuer(issuers.Price, moolaKit.issuer);
+
+  const simoleanAmount = AmountMath.make(simoleanKit.brand, 3n);
+  const moolaAmount = AmountMath.make(moolaKit.brand, 4n);
+
+  // Alice makes a sell offer with misplaced keyword-issuer pair
+  const invitation = await E(publicFacet).makeInvitation();
+
+  const sellOrderProposalSwapped = harden({
+    give: { Asset: simoleanAmount },
+    want: { Price: moolaAmount },
+    exit: { onDemand: null },
+  });
+
+  const sellPaymentSwapped = simoleanKit.mint.mintPayment(simoleanAmount);
+
+  // Alice executes the offer with the misplaced keyword-issuer pair
+  const seat = await E(zoe).offer(
+    invitation,
+    sellOrderProposalSwapped,
+    { Asset: sellPaymentSwapped },
+  );
+  await eventLoopIteration();
+
+  const offerResult = await E(seat).getOfferResult();
+  assertions.assertOfferResult(offerResult, new Error('Brand mismatch'));
 });
