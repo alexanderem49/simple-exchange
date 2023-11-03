@@ -61,14 +61,14 @@ In order to run unit tests, just run the following command:
 ```shell
 yarn unit-test
 ```
-This will run tests for both durable and non-durable contract versions. You will see a lot of debug console logs from Agoric SDK, including some errors - these errors are triggered by unit tests to assert the failing branches. In total 16 unit tests should pass.
+This will run tests for both durable and non-durable contract versions. You will see a lot of debug console logs from Agoric SDK, including some errors - these errors are triggered by unit tests to assert the failing branches. In total 16 unit tests should pass - 8 tests for non durable contract and 8 tests for durable contract.
 
 ## Integration tests
 
-The integration test is setting up an enviroment with separate smart wallets and checks that exchange contract can execute a successful trade.
+The integration test is setting up an enviroment with separate smart wallets and checks that upgradeable exchange contract can execute a successful trade.
 
 The integration test includes only one test case:
-- make trade - executes trade successfully
+- make trade - check that contract properly executes the trade when sell and buy offer can satisfy each other
 
 In order to run unit tests, just run the following command:
 ```shell
@@ -136,6 +136,13 @@ Note: the sell and buy `offerId` index is set to 0. If you wish to execute any o
 
 
 ## Swingset tests
+
+The swingset test is meant to check that durable contract upgradeability works as expected.
+
+The swingset test includes 3 test cases:
+- null-upgrade - check that upgrade executes successfully
+- null-upgrade-orderBook - check that upgrade executes successfully and order book is preserved
+- null-upgrade-exchange - check that contract is able to execute a trade with offers made before upgrade
 
 In order to run Swingset tests, just run the following command:
 ```shell
