@@ -78,37 +78,27 @@ The `publicFacet` has two methods:
 ```
 
 ## Durable objects and storage
-
-todo: complete this section
-mention that we use the zone API, put reference to agoric documentation. 
+ToDo: complete this section
 
 The contract uses a durable storage to store the order book state. The storage is provided by the `storageNode` passed as a private argument to the `startInstance` method. The storage is used to store the order book state and the marshaller is used to serialize and deserialize the contract state. The state of durable storage is preserved when the contract is upgraded.
 
-
-
 ```jsx
   const { marshaller, storageNode } = privateArgs;
+```
 
-  // Create a zone whose objects persist between Agoric vat upgrades.
+Address the zone API
+```jsx
   const zone = makeDurableZone(baggage);
+```
 
-  ...
-
-  // Create durable storages for the order book, one for buy orders and
-  // one for sell orders.
-  // Durable storage is a storage that persists with contract upgrades.
-  // Using durable storage makes this contract upgradable without losing
-  // the order book data.
+Address durable storage and objects
+```jsx
   const sellSeatsMap = zone.mapStore('sellSeats');
   const buySeatsMap = zone.mapStore('buySeats');
 ```
 
 
-Returns a durable `Subscriber` that can be used to retrieve the order book records and get updates when order book state changes.
-
 ```jsx
-  // Create a recorder kit that will be used to create a durable subscriber
-  // service to register the order book changes.
   const { makeRecorderKit } = prepareRecorderKitMakers(baggage, marshaller);
 
   const {
@@ -141,10 +131,13 @@ The makeInvitation method will validate if the proposalShape of the offer submit
 ### exchangeOfferHandler
 
 The exchangeOfferHandler function is responsible for retrieving proposal from the user seat, which will be useful to verify if it is a buy or sell order.
-There is also the necessity to validate if the brands of the Asset and Price are the same as the ones defined when contract was instantiated, ...
+There is also the necessity to validate if the brands of the Asset and Price are the same as the ones defined when contract was instantiated because ...
 
-ToDo: complete the sentence above Describing the behaviour that we saw when an mismatch offer is made .
-Then mention that the swapIfCanTradeAndUpdateBook is called and the order of its arguments is based on the type of order that is being made
+After identifying the type of order that is being submited, the swapIfCanTradeAndUpdateBook method will be called, where the order of the map of user seats passed as arguments will defer because ...
+
+The swapIfCanTradeAndUpdateBook is responsible for updating the maps of buys and sells orders based on the returned object from the swapIfCanTrade method ...
+
+ToDo: complete the sentences above
 
 
 ```jsx
@@ -176,31 +169,7 @@ Then mention that the swapIfCanTradeAndUpdateBook is called and the order of its
   };
 ```
 
-### swapIfCanTradeAndUpdateBook
-
-This function is responsible for updating the maps of buys and sells orders based on the returned object from the swapIfCanTrade method. 
-
-Todo: you were describing here the logic behind swapIfCanTrade(), you should instead complete the sentence above with the logic inside the if condition 
-
-The subscriber is always updated, reflecting the latest state of the order book.  
-
-```jsx
-  // Process an incoming offer. If the offer can be satisfied, swap and remove
-  // the counter offer from the counterOffers storage. If the offer cannot be
-  // satisfied, add the seat to the counterOffers storage.
-  const swapIfCanTradeAndUpdateBook = (counterOffers, coOffers, userSeat) => {
-    const seat = swapIfCanTrade(counterOffers, userSeat);
-
-    if (seat) {
-      counterOffers = counterOffers.delete(seat);
-    } else {
-      coOffers.init(userSeat, userSeat.getProposal());
-    }
-
-    // Update the subscriber state with the changes made to the order book.
-    updateOrderBook();
-  };
-```
+ToDo: I would remove the section (swapIfCanTradeAndUpdateBook) since we can explain its logic on the section above and avoid repeating information
 
 ### swapIfCanTrade
 
@@ -236,7 +205,8 @@ The `satisfies` method checks if the offer proposal satisfies the wants of the c
 
 ## Subscriptions
 
-todo: describe the state data that is being recorded, when it is updated. and why we add the brands to the state
+ToDo: describe the state data that is being recorded, when it is updated. 
+Also, mention why we add the brands to the state
 
 ## Usage and Integration
 
