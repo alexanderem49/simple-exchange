@@ -2,7 +2,8 @@
 
 ## Description
 
-This tutorial showcases how to interact with the simpleExchnage dApp in a local environment, as well as how to deploy the contract in the Agoric Devnet.
+This tutorial showcases how to interact with the SimpleExchange dApp in a local environment, as well as how to deploy the contract in the Agoric Devnet.
+
 The tutorial page is structured as follows:
 
 - Pre-requisites
@@ -17,7 +18,7 @@ The tutorial page is structured as follows:
 ## Prerequisites
 
 - Follow the [installing the Agoric SDK](https://docs.agoric.com/guides/getting-started/) guide to install the Agoric Software Development Kit (SDK);
-  - Important: instead of using the community-dev branch, you need to check out to the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
+  - Important: instead of using the community-dev branch, you need to check out the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
 - Clone the [simpleExchange repository](https://github.com/alexanderem49/simple-exchange) and run `agoric install` in the project root directory;
 
 ```bash
@@ -37,19 +38,17 @@ agoric --version # 0.21.2-u11.0
 ### Unit tests
 
 We covered the most important cases in unit tests, making sure that the exchange contract works as expected.
-The testing framework used is [Ava](https://github.com/avajs/ava), and we build a set of [tools](../contract/test/tools/) that make the testing environment more clean and easier to scale.
+The testing framework used is [Ava](https://github.com/avajs/ava), and we build a set of [tools](../contract/test/tools/) that make the testing environment cleaner and easier to scale.
 
-We include 2 versions of unit tests, one for the basic and other for the upgradable version of the contract. Both of them contain exact same test cases, but each of them reflects the difference when deploying, configuring and communicating with the durable and non-durable contract versions :
-
+We include 2 versions of unit tests, one for the basic and the other for the upgradable version of the contract. Both of them contain the exact same test cases, but each of them reflects the difference when deploying, configuring, and communicating with the durable and non-durable contract versions :
 - `./contract/test/unitTests/test-simpleExchange.js`
 - `./contract/test/unitTests/test-upgradableSimpleExchange.js`
 
-Unit tests include following test cases:
-
-- make sell offer - check that contract properly handles incoming sell offer
-- make buy offer - check that contract properly handles incoming buy offer
-- make trade - check that contract properly executes the exchange when sell and buy offer can satisfy each other
-- make offer with wrong issuers - check that offer with wrong issuer fails
+Unit tests include the following test cases:
+- make sell offer - check that the contract properly handles incoming sell offer
+- make buy offer - check that the contract properly handles incoming buy offer
+- make trade - check that the contract properly executes the exchange when sell and buy offers can satisfy each other
+- make offer with wrong issuers - check that offer with the wrong issuer fails
 - make offer with offerProposal missing attribute - check that offer with wrong offerProposal attributes fails
 - make offer without offerProposal - check that offer without offerProposal fails
 - offers with null or invalid shapes on the proposals - check with different invalid shapes set that each of them fails
@@ -57,7 +56,7 @@ Unit tests include following test cases:
 - make offer with misplaced issuers - check if the contract refuses an order with a mismatch in the keyword-issuer pair
 - make trade with surplus assets in Alice's payout - check if the contract returns the expected surplus when an exchange is done
 
-In order to run unit tests, just run the following command:
+To run unit tests, just run the following command:
 
 ```shell
 cd simple-exchange
@@ -79,15 +78,14 @@ yarn integration-test
 
 ### Swingset tests
 
-The swingset tests are meant to check that simpleExchange contract upgradeability works as expected. In this case, it means that the orderBook state and the subscriber object survives a contract upgrade.
+The swingset tests are meant to check that simpleExchange contract upgradeability works as expected. In this case, it means that the orderBook state and the subscriber object survive a contract upgrade.
 
 The swingset test includes 3 test cases:
-
 - null-upgrade - check that the contract null-upgrade is executed successfully
-- null-upgrade-orderBook - check that upgrade is executed successfully and order book is preserved
-- null-upgrade-exchange - check that contract is able to execute a match an order made before upgrade with one made after it.
+- null-upgrade-orderBook - check that the upgrade is executed successfully and the order book is preserved
+- null-upgrade-exchange - check that the contract can execute a match an order made before the upgrade with one made after it.
 
-In order to run Swingset tests, just run the following command:
+To run Swingset tests, just run the following command:
 
 ```shell
 yarn swingset-test
@@ -122,7 +120,7 @@ cd simple-exchange/
 make bundle-contract
 ```
 
-Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
+Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
 
 ```
 jorgelopes@Jorges-MBP my-simple-exchange % make bundle-contract
@@ -139,6 +137,7 @@ You can now run a governance submission command like:
 Remember to install bundles before submitting the proposal:
   agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-2650f4c0249bec056ff83866ab0d5aae340e29781ef5544941c1e7f1586b1bbf57c791022ff3c9d9be0d88a9b0dc9884d3fc8fa209c505d085a1117596f52e54.json
   agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-60fe5d5e379113b78f3cfd5a00ff13a25d36e5c6e63c9fecaf9d586f834d8d6d53259bfe499876e3b8fc84d85e02da7e345bf6344868bb2135a69a2d81c70509.json
+
 ```
 
 After making the adjustments mentioned above, run the following command in the same terminal:
@@ -173,14 +172,13 @@ cd simple-exchange/contract/test/smokeTests/
 There are 2 methods to easily query the contract state of the order book:
 
 1. Agoric Wallet REPL
-
    - get instance from agoricNames
    - get publicFacet
    - get subscriber
    - get updated state
 
 2. [Storage Viewer](https://p2p-org.github.io/p2p-agoric-vstorage-viewer/#http://localhost:26657||)
-   - load published children keys
+   - load published children's keys
    - load simpleExchange data
 
 ## Contract Deployment
@@ -200,24 +198,8 @@ make bundle-contract
 
 This target will generate the [startSimpleExchange](../startSimpleExchange.js) and [startSimpleExchange-permit](../startSimpleExchange-permit.json) files in the project root, as well as the `contract` and `manifest` [bundles](../cache/).
 
-Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
+Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively. See [Smoke tests](#submit-core-eval) for more details
 
-```
-jorgelopes@Jorges-MBP my-simple-exchange % make bundle-contract
-rm -rf /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/*
-/Users/jorgelopes/Documents/GitHub/Agoric/agoric-sdk/packages/agoric-cli/bin/agoric run /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
-agoric: run: running /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
-agoric: run: Deploy script will run with Node.js ESM
-creating startSimpleExchange-permit.json
-creating startSimpleExchange.js
-You can now run a governance submission command like:
-  agd tx gov submit-proposal swingset-core-eval startSimpleExchange-permit.json startSimpleExchange.js \
-    --title="Enable <something>" --description="Evaluate startSimpleExchange.js" --deposit=1000000ubld \
-    --gas=auto --gas-adjustment=1.2
-Remember to install bundles before submitting the proposal:
-  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-2650f4c0249bec056ff83866ab0d5aae340e29781ef5544941c1e7f1586b1bbf57c791022ff3c9d9be0d88a9b0dc9884d3fc8fa209c505d085a1117596f52e54.json
-  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-60fe5d5e379113b78f3cfd5a00ff13a25d36e5c6e63c9fecaf9d586f834d8d6d53259bfe499876e3b8fc84d85e02da7e345bf6344868bb2135a69a2d81c70509.json
-```
 
 ### Setup wallet
 
@@ -227,7 +209,7 @@ One wallet is needed for submitting the proposal, for that you can run the follo
 agd keys add gov
 ```
 
-Setup a smart-wallet and request funds at the [devnet faucet](https://devnet.faucet.agoric.net/), using the address from the previous step.
+Set up a smart-wallet and request funds at the [devnet faucet](https://devnet.faucet.agoric.net/), using the address from the previous step.
 
 ### Install bundles
 
@@ -259,10 +241,9 @@ agd query gov proposals --node='https://devnet.rpc.agoric.net:443' --chain-id='a
 
 You can also follow the state of your proposal on the [ Agoric devnet explorer](https://devnet.explorer.agoric.net/agoric/gov).
 
-### Get proposal approved
+### Get the proposal approved
 
-In order to deploy a contract on devnet, the proposal needs to pass the voting stage. So it is advised to inform the community on the devnet channel on [Agoric discord](https://discord.com/channels/585576150827532298/766738012380856343) in advance, that you plan to submit a proposal, so they can vote on it.
-
+To deploy a contract on devnet, the proposal needs to pass the voting stage. So it is advised to inform the community on the devnet channel on [Agoric discord](https://discord.com/channels/585576150827532298/766738012380856343) in advance, that you plan to submit a proposal, so they can vote on it.
 
 ### Useful source of information
 
@@ -272,9 +253,9 @@ In order to deploy a contract on devnet, the proposal needs to pass the voting s
 
 ## Launch UI
 
-To lunch the simpleExhanghe UI the first step is to update the RPC address and chain ID accordingly to where the contract was deployed.
+To launch the simpleExhanghe UI the first step is to update the RPC address and chain ID according to where the contract was deployed.
+At the [store.js file](todo), line 5, update the `rpcAddr` and `chainId` passed to the `makeAgoricChainStorageWatcher`.
 
-At the [store.js file](todo), line 5, update the `rpcAddr` and `chainId` passed to the `makeAgoricChainStorageWatcher`.  
 If you wish to run the application on:
 
 - local chain - `('http://localhost:26657', 'agoriclocal')`
@@ -289,3 +270,4 @@ yarn run dev
 ```
 
 Now, you can open your browser and go to http://localhost:5173/#trade
+
