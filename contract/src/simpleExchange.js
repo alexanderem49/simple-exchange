@@ -80,6 +80,18 @@ const start = (zcf) => {
   const exchangeOfferHandler = (seat) => {
     const { want, give } = seat.getProposal();
 
+    const { Asset, Price } = zcf.getTerms().brands;
+
+    // Validate that the brands of the Asset and Price are the same as the
+    // ones defined in the contract.
+    const asset = want.Asset || give.Asset;
+    const price = want.Price || give.Price;
+
+    if (asset.brand !== Asset || price.brand !== Price) {
+      seat.fail();
+      return new Error('Brand mismatch');
+    }
+
     // A Buy order is an offer that wants Asset and gives Price and vice-versa.
     // Based on the order, the contract will try to execute an exchange with the
     // respective counterOffers list.
