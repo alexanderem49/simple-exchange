@@ -29,21 +29,16 @@ const prepare = async (zcf, privateArgs, baggage) => {
   // should use keywords 'Asset' and 'Price'.
   assertIssuerKeywords(zcf, harden(['Asset', 'Price']));
 
-  // Create a recorder kit that will be used to create a durable subscriber
-  // service to register the order book changes.
+  // Wrap a Publisher to record all the order book changes to chain storage.
   const { makeRecorderKit } = prepareRecorderKitMakers(baggage, marshaller);
-
   const {
     recorderKit: { subscriber, recorder },
   } = await provideAll(baggage, {
     recorderKit: () => makeRecorderKit(storageNode),
   });
 
-  // Create durable storages for the order book, one for buy orders and
+  // Create durable storage for the order book, one map for buy orders and
   // one for sell orders.
-  // Durable storage is a storage that persists with contract upgrades.
-  // Using durable storage makes this contract upgradable without losing
-  // the order book data.
   const sellSeatsMap = zone.mapStore('sellSeats');
   const buySeatsMap = zone.mapStore('buySeats');
 
@@ -60,7 +55,7 @@ const prepare = async (zcf, privateArgs, baggage) => {
     return offerList;
   };
 
-  // Return a state that includes the brands associeted with the Asset and Price,
+  // Return a state that includes the brands associated with the Asset and Price,
   // as well as the order book, both buys and sells.
   const getOrderBook = () => ({
     state: {
