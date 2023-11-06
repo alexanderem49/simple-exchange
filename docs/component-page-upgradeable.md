@@ -31,7 +31,7 @@ agoric --version # 0.21.2-u11.0
 
 As this contract was written with simplicity in mind, this contract doesn’t have any dependency other that agoric-sdk itself (which depends on go, node, npm and yarn, check Agoric SDK getting started [here](https://docs.agoric.com/guides/getting-started/#getting-support)).
 
-In order to start an upgradeable instance of the SimpleExchange contract, it requires the privateArgs to be passed to the `startInstance` method. The private arguments should include the marshaller and the storage node. The storage node is used to store the contract state on the chainStorage, and the marshaller is used to encode the data before being published on the storageNode. The Installation reference and the issuer keywords record are also required.
+In order to start an upgradeable instance of the SimpleExchange contract, it requires the privateArgs to be passed to the `startInstance` method. The private arguments should include the marshaller and the storage node. The storage node is used to store the contract state on the `chainStorage`, and the marshaller is used to encode the data before being published on the `storageNode`. The Installation reference and the issuer keywords record are also required.
 
 
 ```jsx
@@ -112,7 +112,7 @@ Address durable storage and objects
 
 ### makeInvitation
 
-The makeInvitation method will validate if the proposalShape of the offer submitted is aligned with the pattern defined bellow, if so, it will call the exchangeOfferHandler.
+The makeInvitation method will validate if the proposalShape of the offer submitted is aligned with the pattern defined bellow, if so, it will call the `exchangeOfferHandler`.
 
 ```jsx
   const makeExchangeInvitation = () => {
@@ -130,15 +130,13 @@ The makeInvitation method will validate if the proposalShape of the offer submit
 
 ### exchangeOfferHandler
 
-The exchangeOfferHandler function is responsible for retrieving proposal from the user seat, which will be useful to verify if it is a buy or sell order.
-There is also the necessity to validate if the brands of the Asset and Price are the same as the ones defined when contract was instantiated because ...
+The `exchangeOfferHandler` function is responsible for retrieving proposal from the user seat, which will be useful to verify if it is a buy or sell order.
 
-After identifying the type of order that is being submited, the swapIfCanTradeAndUpdateBook method will be called, where the order of the map of user seats passed as arguments will defer because ...
+There is also the necessity to validate if the brands of the Asset and Price are the same as the ones defined when contract was instantiated. That is done in order to eliminate the possibility of a user submitting an offer with a different brand than the one defined specifically for the Asset and Price. Without this validaton, if contract deployed with Asset brand as moola and Price brand as simolean, a user could submit an offer with Asset brand as simolean and Price brand as moola, which would be invalid.
 
-The swapIfCanTradeAndUpdateBook is responsible for updating the maps of buys and sells orders based on the returned object from the swapIfCanTrade method ...
+After identifying the type of order that is being submited, the `swapIfCanTradeAndUpdateBook` method will be called, where the order of the map of user seats passed as arguments, where 1 argument is the map of user seats that will be used to find a counteroffer, and the other argument is the map of user seats that will be used to store the new order.
 
-ToDo: complete the sentences above
-
+The `swapIfCanTradeAndUpdateBook` is responsible for updating the maps of buys and sells orders based on the returned object from the `swapIfCanTrade` method - if it was able to find a counteroffer and execute the trade, the counteroffer will be returned and it will be removed from the map, otherwise, undefined will be returned and the order will be added to the map.
 
 ```jsx
   // The invitation handler will retrieve the offer proposal and based on it,
@@ -168,8 +166,6 @@ ToDo: complete the sentences above
     }
   };
 ```
-
-ToDo: I would remove the section (swapIfCanTradeAndUpdateBook) since we can explain its logic on the section above and avoid repeating information
 
 ### swapIfCanTrade
 
