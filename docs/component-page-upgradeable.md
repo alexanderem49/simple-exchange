@@ -201,8 +201,11 @@ The `satisfies` method checks if the offer proposal satisfies the wants of the c
 
 ## Subscriptions
 
-ToDo: describe the state data that is being recorded, when it is updated. 
-Also, mention why we add the brands to the state
+We use the subscriber service to notify users when the order book state changes. The subscriber service is provided by the `recorderKit` and it is used to record the state of the contract. The subscriber service is used to notify users when the order book state changes. The subscriber service is provided by the `recorderKit` and it is used to record the state of the contract. 
+
+Specifically, the state that is being recorded includes the Asset and Price brands info and the order book state. The order book state is composed by the list of buy and sell orders. Both lists are composed by the list of user seats.
+
+The brands data is included for the clients of the contract to be able to identify the brands of the Asset and Price that are being used by the contract.
 
 ## Usage and Integration
 
