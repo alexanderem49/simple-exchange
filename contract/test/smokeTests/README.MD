@@ -17,9 +17,9 @@
 ## Submit core-eval
 
 > % cd simple-exchange/  
-> % make build-proposal
+> % make bundle-contract
 
-Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the Makefile variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively. 
+Note: your terminal will print a message similar to the one bellow, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the Makefile variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
 
 ```
 jorgelopes@Jorges-MBP my-simple-exchange % make build-proposal
@@ -44,21 +44,20 @@ Remember to install bundles before submitting the proposal:
 
 > % cd simple-exchange/contract/test/smokeTests/  
 > % agoric deploy updateAssetList  
-> % agoric deploy updateReferenceList  
+> % agoric deploy updateReferenceList
 
 > % ./sellOffer  
 > % ./buyOffer
 
-Note: the sell and buy `offerId` index is set to 0. If you wish to execute any of the scripts multiple times, remember to set the `SELL_INDEX` and/or `BUY_INDEX` to the respective incremental value, for example `export SELL_INDEX=1`
-
 ## Verify order book
 
 1. Agoric Wallet REPL
-    - get instance from agoricNames
-    - get publicFacet
-    - get subscriber
-    - get updated state
+
+   - get instance from agoricNames
+   - get publicFacet
+   - get subscriber
+   - get updated state
 
 2. Storage Viewer
-    - load published children keys
-    - load simpleExchange data
+   - load published children keys
+   - load simpleExchange data

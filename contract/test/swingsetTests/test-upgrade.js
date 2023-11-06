@@ -87,45 +87,45 @@ test('null-upgrade-orderBook', async (t) => {
   t.log('run controller');
   await controller.run();
 
-  const [assertOrderBook] = await run(controller, 'assertOrderBook', [[], []]);
+  const [assertOrderBook] = await run(controller, 'assertState', [[], []]);
   t.is(assertOrderBook, 'fulfilled');
 
-  let [assertOrderBookLength] = await run(
+  let [assertStateLength] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 0],
   );
-  t.is(assertOrderBookLength, 'fulfilled');
+  t.is(assertStateLength, 'fulfilled');
 
   let [addSellOffer] = await run(controller, 'addSellOffer', []);
   t.is(addSellOffer, 'fulfilled');
 
-  [assertOrderBookLength] = await run(
+  [assertStateLength] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 1],
   );
-  t.is(assertOrderBookLength, 'fulfilled');
+  t.is(assertStateLength, 'fulfilled');
 
   const [upgrade] = await run(controller, 'upgrade', ['simple_exchange_v1']);
   t.is(upgrade, 'fulfilled');
 
-  [assertOrderBookLength] = await run(
+  [assertStateLength] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 1],
   );
-  t.is(assertOrderBookLength, 'fulfilled');
+  t.is(assertStateLength, 'fulfilled');
 
   [addSellOffer] = await run(controller, 'addSellOffer', []);
   t.is(addSellOffer, 'fulfilled');
 
-  [assertOrderBookLength] = await run(
+  [assertStateLength] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 2],
   );
-  t.is(assertOrderBookLength, 'fulfilled');
+  t.is(assertStateLength, 'fulfilled');
 });
 
 test('null-upgrade-exchange', async (t) => {
@@ -140,19 +140,19 @@ test('null-upgrade-exchange', async (t) => {
   const [upgrade] = await run(controller, 'upgrade', ['simple_exchange_v1']);
   t.is(upgrade, 'fulfilled');
 
-  let [assertOrderBookLength] = await run(
+  let [assertStateLength] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 1],
   );
-  t.is(assertOrderBookLength, 'fulfilled');
+  t.is(assertStateLength, 'fulfilled');
 
   const [addBuyOffer] = await run(controller, 'addBuyOffer', []);
   t.is(addBuyOffer, 'fulfilled');
 
   let [assertOrderBookLength1] = await run(
     controller,
-    'assertOrderBookLength',
+    'assertStateLength',
     [0, 0],
   );
   t.is(assertOrderBookLength1, 'fulfilled');

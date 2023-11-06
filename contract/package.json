@@ -37,7 +37,8 @@
     "@agoric/zoe": "beta",
     "@agoric/vats": "0.15.1",
     "@agoric/vat-data": "beta",
-    "@agoric/internal": "0.2.1"
+    "@agoric/internal": "0.2.1",
+    "@agoric/zone": "^0.2.2"
   },
   "ava": {
     "files": [
