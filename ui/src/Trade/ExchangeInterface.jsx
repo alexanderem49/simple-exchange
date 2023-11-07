@@ -8,13 +8,15 @@ export default function ExchangeInterface() {
   const [outputValue, setOutputValue] = useState('');
   const [assetLabel, setAssetLabel] = useState('Asset:');
   const [priceLabel, setPriceLabel] = useState('Price:');
-  const [assetBrandName, setAssetBrandName] = useState('BLD');
-  const [priceBrandName, setPriceBrandName] = useState('IST');
+  const globalAssetBrandName = useStore((state) => state.assetBrandName);
+  const globalPriceBrandName = useStore((state) => state.priceBrandName);
+  const [assetBrandName, setAssetBrandName] = useState(`${globalAssetBrandName}`);
+  const [priceBrandName, setPriceBrandName] = useState(`${globalPriceBrandName}`);
   const [isOpen, setIsOpen] = useState(false);
   const wallet = useStore((state) => state.wallet);
   const notifyUser = useStore((state) => state.notifyUser);
   const assetBrand = useStore((state) => state.assetBrand);
-  const priceBrand = useStore((state) => state.assetBrand);
+  const priceBrand = useStore((state) => state.priceBrand);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
   const isBuyOrder = assetLabel === 'Price:';
 
@@ -26,6 +28,11 @@ export default function ExchangeInterface() {
       console.log('vbankAssets in Exchange:', vbankAssets);
     }
   }, [vbankAssets]);
+
+  useEffect(() => {
+    setAssetBrandName(globalAssetBrandName);
+    setPriceBrandName(globalPriceBrandName);
+  }, [globalAssetBrandName, globalPriceBrandName]);
 
   const parseUserInput = (brand, str) => {
     const displayInfo = getDisplayInfo(brand);
@@ -45,8 +52,16 @@ export default function ExchangeInterface() {
   };
 
   const handleExchange = () => {
-    const parsedInput = parseUserInput(assetBrand, inputValue);
-    const parsedOutput = parseUserInput(priceBrand, outputValue);
+    let parsedInput;
+    let parsedOutput;
+
+    if (isBuyOrder) {
+      parsedInput = parseUserInput(assetBrand, outputValue);
+      parsedOutput = parseUserInput(priceBrand, inputValue);
+    } else {
+      parsedInput = parseUserInput(assetBrand, inputValue);
+      parsedOutput = parseUserInput(priceBrand, outputValue);
+    }
 
     console.log('Parsed Input:', parsedInput);
     console.log('Parsed Output:', parsedOutput);
@@ -58,9 +73,9 @@ export default function ExchangeInterface() {
 
     let offerSpec;
     if (isBuyOrder) {
-      offerSpec = buyOffer(parsedInput, parsedOutput);
+      offerSpec = buyOffer(parsedOutput, parsedInput);
     } else {
-      offerSpec = sellOffer(parsedInput, parsedOutput);
+      offerSpec = sellOffer(parsedOutput, parsedInput);
     }
 
     void wallet.makeOffer(
@@ -110,7 +125,7 @@ export default function ExchangeInterface() {
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {assetLabel} {assetBrandName}
+          {assetLabel} {assetBrandName || 'Loading...'}
         </span>
       </div>
       <div className="flex items-center mb-3 justify-center w-full mr-28">
@@ -143,7 +158,7 @@ export default function ExchangeInterface() {
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
-          {priceLabel} {priceBrandName}
+          {priceLabel} {priceBrandName || 'Loading...'}
         </span>
       </div>
       <button onClick={handleExchange} className="px-5 py-2 bg-green-500 text-white rounded">

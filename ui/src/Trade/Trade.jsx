@@ -9,6 +9,19 @@ function Trade() {
   const sellOrders = useStore((state) => state.sellOrders);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
+  const liveBuyOrders = useStore((state) => state.liveBuyOrders);
+  const liveSellOrders = useStore((state) => state.liveSellOrders);
+
+  const buyLiveOrderData = liveBuyOrders.map((buyOrder) => ({
+    give: extractOrderDetail(buyOrder.give, getDisplayInfo),
+    want: extractOrderDetail(buyOrder.want, getDisplayInfo)
+  }));
+
+  const sellLiveOrderData = liveSellOrders.map((sellOrder) => ({
+    give: extractOrderDetail(sellOrder.give, getDisplayInfo),
+    want: extractOrderDetail(sellOrder.want, getDisplayInfo)
+  }));
+
   const buyOrderData = buyOrders.map((buyOrder) => ({
     give: extractOrderDetail(buyOrder.give, getDisplayInfo),
     want: extractOrderDetail(buyOrder.want, getDisplayInfo)
@@ -19,7 +32,30 @@ function Trade() {
     want: extractOrderDetail(sellOrder.want, getDisplayInfo)
   }));
 
-  console.log('buyOrderData ->: ', buyOrderData);
+  const transformOrderData = (orders) =>
+    orders.map((order) => ({
+      give: extractOrderDetail(order.give, getDisplayInfo),
+      want: extractOrderDetail(order.want, getDisplayInfo)
+    }));
+
+  const OrderSection = ({ title, data }) => (
+    <div className="flex flex-col w-1/2 space-y-4">
+      <h2 className="text-lg font-bold">{title}</h2>
+      {data && data.length > 0 ? (
+        <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
+          {renderTableContent(data)}
+        </div>
+      ) : (
+        renderNoDataContent()
+      )}
+    </div>
+  );
+
+  let currentSellOrderData = activeTab === 'your-orders' ? sellLiveOrderData : sellOrderData;
+  let currentBuyOrderData = activeTab === 'your-orders' ? buyLiveOrderData : buyOrderData;
+
+  console.log('currentSellOrderData ->: ', currentSellOrderData);
+  console.log('currentBuyOrderData ->: ', currentBuyOrderData);
 
   const renderTableContent = (data) => (
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
@@ -61,36 +97,27 @@ function Trade() {
           >
             Order Book
           </button>
+          <button
+            onClick={() => setActiveTab('live-orders')}
+            className={`px-4 py-2 ${activeTab === 'live-orders' ? 'underline' : ''}`}
+          >
+            Your Orders
+          </button>
         </div>
         <div className="flex space-x-4">
-          {sellOrderData.length === 0 && buyOrderData.length === 0 ? (
+          {(activeTab === 'your-orders' && !liveBuyOrders.length && !liveSellOrders.length) ||
+          (activeTab === 'all-orders' && !buyOrders.length && !sellOrders.length) ? (
             <div className="w-full">{renderNoDataContent()}</div>
           ) : (
             <>
-              <div className="flex flex-col w-1/2 space-y-4">
-                {sellOrderData.length > 0 ? (
-                  <>
-                    <h2 className="text-lg font-bold">Sell</h2>
-                    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                      {renderTableContent(sellOrderData)}
-                    </div>
-                  </>
-                ) : (
-                  renderNoDataContent()
-                )}
-              </div>
-              <div className="flex flex-col w-1/2 space-y-4">
-                {buyOrderData.length > 0 ? (
-                  <>
-                    <h2 className="text-lg font-bold">Buy</h2>
-                    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-                      {renderTableContent(buyOrderData)}
-                    </div>
-                  </>
-                ) : (
-                  renderNoDataContent()
-                )}
-              </div>
+              <OrderSection
+                title={'Sell'}
+                data={activeTab === 'your-orders' ? transformOrderData(liveSellOrders) : transformOrderData(sellOrders)}
+              />
+              <OrderSection
+                title={'Buy'}
+                data={activeTab === 'your-orders' ? transformOrderData(liveBuyOrders) : transformOrderData(buyOrders)}
+              />
             </>
           )}
         </div>
