@@ -71,14 +71,18 @@ export const useStore = create((set, get) => ({
     const { vbankAssets, assetBrand, priceBrand } = get();
     let assetBrandName;
     let priceBrandName;
-    vbankAssets.forEach((vbankAsset) => {
-      if (vbankAsset[1].brand == assetBrand) {
-        assetBrandName = vbankAsset[1].issuerName;
-      }
-      if (vbankAsset[1].brand == priceBrand) {
-        priceBrandName = vbankAsset[1].issuerName;
-      }
-    });
-    set(() => ({ assetBrandName, priceBrandName }));
+
+    if (assetBrand !== null) {
+      vbankAssets.forEach((vbankAsset) => {
+        if (vbankAsset[1].brand == assetBrand) {
+          assetBrandName = vbankAsset[1].issuerName;
+        }
+        if (vbankAsset[1].brand == priceBrand) {
+          priceBrandName = vbankAsset[1].issuerName;
+        }
+      });
+
+      set(() => ({ assetBrandName, priceBrandName }));
+    }
   }
 }));

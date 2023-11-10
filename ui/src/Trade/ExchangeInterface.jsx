@@ -22,6 +22,8 @@ export default function ExchangeInterface() {
 
   const vbankAssets = useStore((state) => state.vbankAssets);
   const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser);
+  console.log('globalAssetBrandName: ', globalAssetBrandName);
+  console.log('assetBrand: ', assetBrand);
 
   useEffect(() => {
     if (vbankAssets.length > 0) {

@@ -28,6 +28,7 @@ const makeStorageWatcher = () => {
   const watchSimpleExchange = () => {
     watcher.watchLatest([AgoricChainStoragePathKind.Data, 'published.simpleExchange'], (simpleExchange) => {
       setSimpleExchangeStates(simpleExchange);
+      getIssuerName();
     });
   };
 
@@ -50,7 +51,6 @@ const makeStorageWatcher = () => {
     if (wallet) {
       watchSmartWallet();
       watchLiveOffers();
-      getIssuerName();
     }
 
     watchVbankAsset();

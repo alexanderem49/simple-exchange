@@ -1,36 +1,20 @@
+import { Tab } from '@headlessui/react';
 import ExchangeInterface from './ExchangeInterface';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { extractOrderDetail } from '../utils/helpers.jsx';
 import { useStore } from '../store/store.js';
 
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
 function Trade() {
-  const [activeTab, setActiveTab] = useState('all-orders');
   const buyOrders = useStore((state) => state.buyOrders);
   const sellOrders = useStore((state) => state.sellOrders);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
 
   const liveBuyOrders = useStore((state) => state.liveBuyOrders);
   const liveSellOrders = useStore((state) => state.liveSellOrders);
-
-  const buyLiveOrderData = liveBuyOrders.map((buyOrder) => ({
-    give: extractOrderDetail(buyOrder.give, getDisplayInfo),
-    want: extractOrderDetail(buyOrder.want, getDisplayInfo)
-  }));
-
-  const sellLiveOrderData = liveSellOrders.map((sellOrder) => ({
-    give: extractOrderDetail(sellOrder.give, getDisplayInfo),
-    want: extractOrderDetail(sellOrder.want, getDisplayInfo)
-  }));
-
-  const buyOrderData = buyOrders.map((buyOrder) => ({
-    give: extractOrderDetail(buyOrder.give, getDisplayInfo),
-    want: extractOrderDetail(buyOrder.want, getDisplayInfo)
-  }));
-
-  const sellOrderData = sellOrders.map((sellOrder) => ({
-    give: extractOrderDetail(sellOrder.give, getDisplayInfo),
-    want: extractOrderDetail(sellOrder.want, getDisplayInfo)
-  }));
 
   const transformOrderData = (orders) =>
     orders.map((order) => ({
@@ -40,7 +24,7 @@ function Trade() {
 
   const OrderSection = ({ title, data }) => (
     <div className="flex flex-col w-1/2 space-y-4">
-      <h2 className="text-lg font-bold">{title}</h2>
+      <h2 className="text-lg font-bold mt-4 px-1">{title}</h2>
       {data && data.length > 0 ? (
         <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
           {renderTableContent(data)}
@@ -50,12 +34,6 @@ function Trade() {
       )}
     </div>
   );
-
-  let currentSellOrderData = activeTab === 'your-orders' ? sellLiveOrderData : sellOrderData;
-  let currentBuyOrderData = activeTab === 'your-orders' ? buyLiveOrderData : buyOrderData;
-
-  console.log('currentSellOrderData ->: ', currentSellOrderData);
-  console.log('currentBuyOrderData ->: ', currentBuyOrderData);
 
   const renderTableContent = (data) => (
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
@@ -87,42 +65,55 @@ function Trade() {
     </div>
   );
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {}, [selectedIndex]);
+
   return (
-    <div className="p-8 flex">
-      <div className="w-2/3 pr-4">
-        <div className="mb-4">
-          <button
-            onClick={() => setActiveTab('all-orders')}
-            className={` py-2 ${activeTab === 'all-orders' ? 'underline' : ''}`}
-          >
-            Order Book
-          </button>
-          <button
-            onClick={() => setActiveTab('live-orders')}
-            className={`px-4 py-2 ${activeTab === 'live-orders' ? 'underline' : ''}`}
-          >
-            Your Orders
-          </button>
-        </div>
-        <div className="flex space-x-4">
-          {(activeTab === 'your-orders' && !liveBuyOrders.length && !liveSellOrders.length) ||
-          (activeTab === 'all-orders' && !buyOrders.length && !sellOrders.length) ? (
-            <div className="w-full">{renderNoDataContent()}</div>
-          ) : (
-            <>
-              <OrderSection
-                title={'Sell'}
-                data={activeTab === 'your-orders' ? transformOrderData(liveSellOrders) : transformOrderData(sellOrders)}
-              />
-              <OrderSection
-                title={'Buy'}
-                data={activeTab === 'your-orders' ? transformOrderData(liveBuyOrders) : transformOrderData(buyOrders)}
-              />
-            </>
-          )}
-        </div>
+    <div className="p-8 flex flex-col lg:flex-row">
+      <div className="w-full lg:w-2/3 pr-4">
+        <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+          <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/10 p-1 mt-4">
+            {['Order Book', 'Your Orders'].map((tab) => (
+              <Tab
+                key={tab}
+                className={({ selected }) =>
+                  classNames(
+                    'w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                    selected ? 'bg-white shadow' : 'text-blue-300 hover:bg-white/[0.12] hover:text-white'
+                  )
+                }
+              >
+                {tab}
+              </Tab>
+            ))}
+          </Tab.List>
+          <Tab.Panels>
+            <Tab.Panel>
+              {buyOrders.length === 0 && sellOrders.length === 0 ? (
+                renderNoDataContent()
+              ) : (
+                <div className="flex flex-wrap ">
+                  <OrderSection title="Sell" data={transformOrderData(sellOrders)} />
+                  <OrderSection title="Buy" data={transformOrderData(buyOrders)} />
+                </div>
+              )}
+            </Tab.Panel>
+            <Tab.Panel>
+              {liveBuyOrders.length === 0 && liveSellOrders.length === 0 ? (
+                renderNoDataContent()
+              ) : (
+                <div className="flex flex-wrap">
+                  <OrderSection title="Sell" data={transformOrderData(liveSellOrders)} className="mr-8" />
+                  <OrderSection title="Buy" data={transformOrderData(liveBuyOrders)} />
+                </div>
+              )}
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
       </div>
-      <div className="w-1/3 pl-4 flex items-center justify-center mt-20">
+      <div className="w-1/3 pl-4 flex items-center justify-center mt-4">
         <ExchangeInterface />
       </div>
     </div>

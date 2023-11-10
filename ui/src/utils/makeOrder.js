@@ -47,7 +47,7 @@ export const makeGenericOnStatusUpdate = (snackBarUpdater) => {
       console.log('ERROR', data);
     }
     if (status === 'seated') {
-      snackBarUpdater('secondary', 'Transaction submitted');
+      snackBarUpdater('info', 'Transaction submitted');
       console.log('Transaction:', data.txn);
       console.log('Offer id:', data.offerId);
     }
