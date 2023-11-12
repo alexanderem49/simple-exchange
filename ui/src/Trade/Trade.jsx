@@ -3,6 +3,7 @@ import ExchangeInterface from './ExchangeInterface';
 import { useEffect, useState } from 'react';
 import { extractOrderDetail } from '../utils/helpers.jsx';
 import { useStore } from '../store/store.js';
+import { Pagination } from './Pagination.jsx';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -16,24 +17,35 @@ function Trade() {
   const liveBuyOrders = useStore((state) => state.liveBuyOrders);
   const liveSellOrders = useStore((state) => state.liveSellOrders);
 
+  const [currentSellPage, setCurrentSellPage] = useState(1);
+  const [currentBuyPage, setCurrentBuyPage] = useState(1);
+  const itemsPerPage = 1;
+
   const transformOrderData = (orders) =>
     orders.map((order) => ({
       give: extractOrderDetail(order.give, getDisplayInfo),
       want: extractOrderDetail(order.want, getDisplayInfo)
     }));
 
-  const OrderSection = ({ title, data }) => (
-    <div className="flex flex-col w-1/2 space-y-4">
-      <h2 className="text-lg font-bold mt-4 px-1">{title}</h2>
-      {data && data.length > 0 ? (
-        <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-          {renderTableContent(data)}
-        </div>
-      ) : (
-        renderNoDataContent()
-      )}
-    </div>
-  );
+  const OrderSection = ({ title, data, currentPage, onPageChange }) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+
+    return (
+      <div className="flex flex-col w-1/2 space-y-4">
+        <h2 className="text-lg font-bold mt-4 px-1">{title}</h2>
+        {paginatedData && paginatedData.length > 0 ? (
+          <div>
+            {renderTableContent(paginatedData)}
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+          </div>
+        ) : (
+          renderNoDataContent()
+        )}
+      </div>
+    );
+  };
 
   const renderTableContent = (data) => (
     <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
@@ -94,9 +106,23 @@ function Trade() {
               {buyOrders.length === 0 && sellOrders.length === 0 ? (
                 renderNoDataContent()
               ) : (
-                <div className="flex flex-wrap ">
-                  <OrderSection title="Sell" data={transformOrderData(sellOrders)} />
-                  <OrderSection title="Buy" data={transformOrderData(buyOrders)} />
+                <div className="flex flex-wrap">
+                  <div className="w-1/2">
+                    <OrderSection
+                      title="Sell"
+                      data={transformOrderData(sellOrders)}
+                      currentPage={currentSellPage}
+                      onPageChange={setCurrentSellPage}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <OrderSection
+                      title="Buy"
+                      data={transformOrderData(buyOrders)}
+                      currentPage={currentBuyPage}
+                      onPageChange={setCurrentBuyPage}
+                    />
+                  </div>
                 </div>
               )}
             </Tab.Panel>
@@ -105,15 +131,29 @@ function Trade() {
                 renderNoDataContent()
               ) : (
                 <div className="flex flex-wrap">
-                  <OrderSection title="Sell" data={transformOrderData(liveSellOrders)} className="mr-8" />
-                  <OrderSection title="Buy" data={transformOrderData(liveBuyOrders)} />
+                  <div className="w-1/2">
+                    <OrderSection
+                      title="Sell"
+                      data={transformOrderData(liveSellOrders)}
+                      currentPage={currentSellPage}
+                      onPageChange={setCurrentSellPage}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <OrderSection
+                      title="Buy"
+                      data={transformOrderData(liveBuyOrders)}
+                      currentPage={currentBuyPage}
+                      onPageChange={setCurrentBuyPage}
+                    />
+                  </div>
                 </div>
               )}
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
       </div>
-      <div className="w-1/3 pl-4 flex items-center justify-center mt-4">
+      <div className="w-1/3 pl-4 flex items-center justify-center mt-4 lg:mt-0">
         <ExchangeInterface />
       </div>
     </div>

@@ -31,6 +31,7 @@ export function getStatusChip(status) {
   return <span className={`${bgColor} text-white py-1 px-2 rounded-full text-xs`}>{status}</span>;
 }
 
+// TODO: change part of BLD and IST
 export function extractOrderDetail(order, getDisplayInfo) {
   const orderType = Object.keys(order)[0];
   const { value, brand } = order[orderType];
