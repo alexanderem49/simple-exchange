@@ -19,7 +19,7 @@ function Trade() {
 
   const [currentSellPage, setCurrentSellPage] = useState(1);
   const [currentBuyPage, setCurrentBuyPage] = useState(1);
-  const itemsPerPage = 1;
+  const itemsPerPage = 4;
 
   const transformOrderData = (orders) =>
     orders.map((order) => ({
@@ -33,10 +33,10 @@ function Trade() {
     const totalPages = Math.ceil(data.length / itemsPerPage);
 
     return (
-      <div className="flex flex-col w-1/2 space-y-4">
+      <div className="flex flex-col w-full lg:w-2/3 space-y-4">
         <h2 className="text-lg font-bold mt-4 px-1">{title}</h2>
         {paginatedData && paginatedData.length > 0 ? (
-          <div>
+          <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
             {renderTableContent(paginatedData)}
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
           </div>
@@ -48,18 +48,18 @@ function Trade() {
   };
 
   const renderTableContent = (data) => (
-    <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
-      <thead>
-        <tr className="text-left">
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Give</th>
-          <th className="py-2 px-4 border-b border-gray-200 text-sm">Want</th>
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Give</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Want</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className="bg-white divide-y divide-gray-200">
         {data.map((item, index) => (
           <tr key={index}>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.give}</td>
-            <td className="py-2 px-4 border-b border-gray-200 text-sm">{item.want}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.give}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.want}</td>
           </tr>
         ))}
       </tbody>
