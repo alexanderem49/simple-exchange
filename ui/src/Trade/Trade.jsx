@@ -33,7 +33,7 @@ function Trade() {
     const totalPages = Math.ceil(data.length / itemsPerPage);
 
     return (
-      <div className="flex flex-col w-full lg:w-2/3 space-y-4">
+      <div className="flex flex-col w-full lg:w-98/100 space-y-4">
         <h2 className="text-lg font-bold mt-4 px-1">{title}</h2>
         {paginatedData && paginatedData.length > 0 ? (
           <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -83,7 +83,7 @@ function Trade() {
 
   return (
     <div className="p-8 flex flex-col lg:flex-row">
-      <div className="w-full lg:w-2/3 pr-4">
+      <div className="w-full lg:w-2/3">
         <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
           <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/10 p-1 mt-4">
             {['Order Book', 'Your Orders'].map((tab) => (
@@ -153,7 +153,7 @@ function Trade() {
           </Tab.Panels>
         </Tab.Group>
       </div>
-      <div className="w-1/3 pl-4 flex items-center justify-center mt-4 lg:mt-0">
+      <div className="fixed bottom-4 right-7 lg:absolute lg:top-22 lg:right-0 lg:mt-8 lg:mr-25">
         <ExchangeInterface />
       </div>
     </div>
