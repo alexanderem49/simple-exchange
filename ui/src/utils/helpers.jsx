@@ -43,12 +43,6 @@ export function extractOrderDetail(order, getDisplayInfo) {
   return `${valueString} ${currency}`;
 }
 
-export function renderOrderContent(data, renderNoDataContent, renderTableContent) {
-  return data && data.length > 0 ? (
-    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
-      {renderTableContent(data)}
-    </div>
-  ) : (
-    renderNoDataContent()
-  );
+export function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
 }

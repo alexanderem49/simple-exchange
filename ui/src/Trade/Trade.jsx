@@ -1,13 +1,11 @@
-import { Tab } from '@headlessui/react';
-import ExchangeInterface from './ExchangeInterface';
 import { useEffect, useState } from 'react';
-import { extractOrderDetail } from '../utils/helpers.jsx';
-import { useStore } from '../store/store.js';
-import { Pagination } from './Pagination.jsx';
+import { Tab } from '@headlessui/react';
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+import { useStore } from '../store/store.js';
+
+import { ExchangeInterface } from './ExchangeInterface';
+import { Pagination } from './Pagination.jsx';
+import { classNames, extractOrderDetail } from '../utils/helpers.jsx';
 
 function Trade() {
   const buyOrders = useStore((state) => state.buyOrders);

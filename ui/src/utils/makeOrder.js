@@ -37,7 +37,7 @@ export const sellOffer = (priceAmount, assetAmount) => {
 harden(buyOffer);
 harden(sellOffer);
 
-export const makeGenericOnStatusUpdate = (snackBarUpdater) => {
+export const makeGenericOnStatusUpdate = (snackBarUpdater, resetInputs) => {
   const onStatusChange = (args) => {
     console.log('args: ', { args });
     const { status, data } = args;
@@ -61,6 +61,7 @@ export const makeGenericOnStatusUpdate = (snackBarUpdater) => {
       console.log('Transaction:', data.txn);
       console.log('Offer id:', data.offerId);
     }
+    resetInputs();
   };
 
   return harden({

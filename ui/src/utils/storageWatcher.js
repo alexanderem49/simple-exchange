@@ -1,7 +1,7 @@
 import { useStore } from '../store/store.js';
 import { AgoricChainStoragePathKind } from '@agoric/rpc';
 
-const makeStorageWatcher = () => {
+export const makeStorageWatcher = () => {
   const { watcher, wallet, setSimpleExchangeStates, setVBank, setLiveOrders, getIssuerName } = useStore.getState();
 
   const watchSmartWallet = () => {
@@ -59,5 +59,3 @@ const makeStorageWatcher = () => {
 
   return { startWatching };
 };
-
-export { makeStorageWatcher };

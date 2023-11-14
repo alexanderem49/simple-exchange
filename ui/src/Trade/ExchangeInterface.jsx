@@ -3,7 +3,7 @@ import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
 import { buyOffer, makeGenericOnStatusUpdate, sellOffer } from '../utils/makeOrder.js';
 
-export default function ExchangeInterface() {
+export function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
   const [outputValue, setOutputValue] = useState('');
   const [assetLabel, setAssetLabel] = useState('Asset:');
@@ -21,7 +21,11 @@ export default function ExchangeInterface() {
   const isBuyOrder = assetLabel === 'Price:';
 
   const vbankAssets = useStore((state) => state.vbankAssets);
-  const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser);
+  const resetInputFields = () => {
+    setInputValue('');
+    setOutputValue('');
+  };
+  const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser, resetInputFields);
 
   useEffect(() => {
     if (vbankAssets.length > 0) {
