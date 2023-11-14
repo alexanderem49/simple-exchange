@@ -11,6 +11,8 @@ function Trade() {
   const buyOrders = useStore((state) => state.buyOrders);
   const sellOrders = useStore((state) => state.sellOrders);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
+  const assetBrandName = useStore((state) => state.assetBrandName);
+  const priceBrandName = useStore((state) => state.priceBrandName);
 
   const liveBuyOrders = useStore((state) => state.liveBuyOrders);
   const liveSellOrders = useStore((state) => state.liveSellOrders);
@@ -21,8 +23,8 @@ function Trade() {
 
   const transformOrderData = (orders) =>
     orders.map((order) => ({
-      give: extractOrderDetail(order.give, getDisplayInfo),
-      want: extractOrderDetail(order.want, getDisplayInfo)
+      give: extractOrderDetail(order.give, getDisplayInfo, assetBrandName, priceBrandName),
+      want: extractOrderDetail(order.want, getDisplayInfo, assetBrandName, priceBrandName)
     }));
 
   const OrderSection = ({ title, data, currentPage, onPageChange }) => {
