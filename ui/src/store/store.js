@@ -22,21 +22,21 @@ export const useStore = create((set, get) => ({
   assetBrandName: '',
   priceBrandName: '',
   setLiveOrders: (liveOffers) => {
+    const newLiveBuyOrders = [];
+    const newLiveSellOrders = [];
+
     liveOffers.forEach((offer) => {
       if (offer[0].startsWith('buy-order-') && offer[1].invitationSpec.instancePath[0] === 'simpleExchangeInstance') {
-        const { liveBuyOrders } = get();
-        liveBuyOrders.push(offer[1].proposal);
-
-        set({ liveBuyOrders });
+        newLiveBuyOrders.push(offer[1].proposal);
       }
       if (offer[0].startsWith('sell-order-') && offer[1].invitationSpec.instancePath[0] === 'simpleExchangeInstance') {
-        const { liveSellOrders } = get();
-        liveSellOrders.push(offer[1].proposal);
-
-        set({ liveSellOrders });
+        newLiveSellOrders.push(offer[1].proposal);
       }
     });
+
+    set({ liveBuyOrders: newLiveBuyOrders, liveSellOrders: newLiveSellOrders });
   },
+
   setSimpleExchangeStates: (simpleExchange) => {
     const assetBrand = simpleExchange.state.brands.Asset;
     const priceBrand = simpleExchange.state.brands.Price;
