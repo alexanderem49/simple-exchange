@@ -18,7 +18,7 @@ The tutorial page is structured as follows:
 ## Prerequisites
 
 - Follow the [installing the Agoric SDK](https://docs.agoric.com/guides/getting-started/) guide to install the Agoric Software Development Kit (SDK);
-  - Important: instead of using the community-dev branch, you need to check out the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
+  - <mark>Important:</mark> instead of using the community-dev branch, you need to check out the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
 - Clone the [simpleExchange repository](https://github.com/alexanderem49/simple-exchange) and run `agoric install` in the project root directory;
 
 ```bash
@@ -28,7 +28,7 @@ npm --version # 9.8.1
 yarn --version # 1.22.5
 
 # inside agoric-sdk folder
-`git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67`
+git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67
 yarn install && yarn build
 agoric --version # 0.21.2-u11.0
 ```
@@ -68,8 +68,8 @@ This will run all test cases in each file. You will see a lot of debug console l
 
 ### Integration tests
 
-The integration test is setting up a testing environment with 2 different smart wallets and checks that simpleExchange contract can execute a successful exchange.
-In order to run unit tests, follow these [instructions](../contract/test/integrationTests/README.md) and then run this command:
+The integration test is setting up a testing environment with 2 different smart wallets and checks that simpleExchange contract can execute a successful exchange.  
+<mark>Important:</mark> in order to run unit tests, follow these [instructions](../contract/test/integrationTests/README.md) and then run this command:
 
 ```shell
 cd simple-exchange

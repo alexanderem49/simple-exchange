@@ -34,7 +34,8 @@
     "lint-check": "yarn workspaces run lint-check",
     "test": "yarn workspaces run test",
     "integration-test": "cd contract && yarn test test/integrationTests",
-    "unit-test": "cd contract && yarn test test/unitTests",
+    "unit-test-basic": "cd contract && yarn test test/unitTests/test-simpleExchange.js",
+    "unit-test-upgradable": "cd contract && yarn test test/unitTests/test-upgradableSimpleExchange.js",
     "swingset-test": "cd contract && yarn test test/swingsetTests",
     "build": "yarn workspaces run build"
   },
