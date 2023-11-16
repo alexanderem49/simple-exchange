@@ -19,19 +19,11 @@ export function ExchangeInterface() {
   const priceBrand = useStore((state) => state.priceBrand);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
   const isBuyOrder = assetLabel === 'Price:';
-
-  const vbankAssets = useStore((state) => state.vbankAssets);
   const resetInputFields = () => {
     setInputValue('');
     setOutputValue('');
   };
   const { onStatusChange } = makeGenericOnStatusUpdate(notifyUser, resetInputFields);
-
-  useEffect(() => {
-    if (vbankAssets.length > 0) {
-      console.log('vbankAssets in Exchange:', vbankAssets);
-    }
-  }, [vbankAssets]);
 
   useEffect(() => {
     setAssetBrandName(globalAssetBrandName);
@@ -93,7 +85,6 @@ export function ExchangeInterface() {
 
   const displayAmount = (amount) => {
     const { brand, value } = amount;
-    const { getDisplayInfo } = useStore.getState();
     const displayInfo = getDisplayInfo(brand);
 
     if (!displayInfo) return '';
