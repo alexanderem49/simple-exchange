@@ -95,9 +95,18 @@ yarn swingset-test
 
 The smoke tests intend to build the core-eval and deploy the simpleExchange contract in a local chain, and interact with it using shell scripts.
 
-#### Launch local chain and client
+#### Create gov1 and gov2 keys
 
 Open a new terminal and run these commands:
+
+```shell
+agd keys add gov1 --keyring-backend=test
+agd keys add gov2 --keyring-backend=test
+```
+
+#### Launch local chain and client
+
+In the same terminal as above run these commands:
 
 ```shell
 cd agoric-sdk/packages/inter-protocol/scripts
