@@ -1,3 +1,4 @@
+import { stringifyValue } from '@agoric/ui-components';
 export const sellMockData = [
   { date: '2022-11-02', status: 'Completed', nftName: 'CryptoPunk' },
   { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' }
@@ -8,24 +9,17 @@ export const buyMockData = [
   { date: '2022-11-03', status: 'Pending', nftName: 'Bored Ape' }
 ];
 
-export function getStatusChip(status) {
-  let bgColor = '';
-  switch (status) {
-    case 'Completed':
-      bgColor = 'bg-green-500';
-      break;
-    case 'Pending':
-      bgColor = 'bg-yellow-500';
-      break;
-    case 'Cancelled':
-      bgColor = 'bg-red-500';
-      break;
-    case 'CounterProposal':
-      bgColor = 'bg-blue-500';
-      break;
-    default:
-      bgColor = 'bg-gray-500';
-  }
+export function extractOrderDetail(order, getDisplayInfo, assetBrandName, priceBrandName) {
+  const orderType = Object.keys(order)[0];
+  const { value, brand } = order[orderType];
+  const { assetKind, decimalPlaces } = getDisplayInfo(brand);
 
-  return <span className={`${bgColor} text-white py-1 px-2 rounded-full text-xs`}>{status}</span>;
+  const valueString = stringifyValue(value, assetKind, decimalPlaces);
+  const currency = orderType === 'Price' ? priceBrandName : assetBrandName;
+
+  return `${valueString} ${currency}`;
+}
+
+export function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
 }

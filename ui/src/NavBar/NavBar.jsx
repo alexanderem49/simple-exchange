@@ -22,18 +22,17 @@ function NavBar() {
   console.log('wallet ');
 
   return (
-    <header className="bg-gray-800 text-white py-4 px-6">
-      <nav className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <img src="/Agoric-logo-white.png" alt="Agoric Logo" className="h-8 mr-2" />
+    <header className="bg-gray-800 text-white">
+      <nav className="flex justify-between items-center px-4 py-4">
+        <div className="flex items-center space-x-2 ml-2.5">
+          <img src="/Agoric-logo-white.png" alt="Agoric Logo" className="h-8" />
           <span className="text-2xl font-bold">Agoric</span>
         </div>
-
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center ml-10">
           <button
             onClick={connectWallet}
             disabled={!!wallet}
-            className={`py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white focus:outline-none ${
+            className={`py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white focus:outline-none mr-20 ${
               wallet ? 'cursor-not-allowed opacity-50' : ''
             }`}
           >
