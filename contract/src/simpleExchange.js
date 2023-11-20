@@ -1,7 +1,7 @@
 import '@agoric/zoe/exported.js';
 import { M } from '@agoric/store';
 import { Far } from '@endo/marshal';
-import { AmountShape } from '@agoric/ertp';
+import { AmountShape, AmountMath } from '@agoric/ertp';
 import { makeNotifierKit } from '@agoric/notifier';
 import {
   assertIssuerKeywords,
@@ -91,6 +91,10 @@ const start = (zcf) => {
       seat.fail();
       return new Error('Brand mismatch');
     }
+
+    // Validate there are not empty values on the offer amounts
+    assert(!AmountMath.isEmpty(asset), 'Asset value should not be empty');
+    assert(!AmountMath.isEmpty(price), 'Price value should not be empty');
 
     // A Buy order is an offer that wants Asset and gives Price and vice-versa.
     // Based on the order, the contract will try to execute an exchange with the

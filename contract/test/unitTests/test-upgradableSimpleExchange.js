@@ -8,7 +8,7 @@ import { setupUpgradableSimpleExchange, setupAssets } from '../tools/setup.js';
 import { eventLoopIteration } from '@agoric/internal/src/testing-utils.js';
 
 test.beforeEach(async (t) => {
-  const { zoe } = await setUpZoeForTest(() => { });
+  const { zoe } = await setUpZoeForTest(() => {});
   const assets = setupAssets();
 
   const makeSimpleMake = (brand) => (value) => AmountMath.make(brand, value);
@@ -627,11 +627,9 @@ test('make offer with misplaced issuers', async (t) => {
   const sellPaymentSwapped = simoleanKit.mint.mintPayment(simoleanAmount);
 
   // Alice executes the offer with the misplaced keyword-issuer pair
-  const seat = await E(zoe).offer(
-    invitation,
-    sellOrderProposalSwapped,
-    { Asset: sellPaymentSwapped },
-  );
+  const seat = await E(zoe).offer(invitation, sellOrderProposalSwapped, {
+    Asset: sellPaymentSwapped,
+  });
   await eventLoopIteration();
 
   const offerResult = await E(seat).getOfferResult();
@@ -645,7 +643,10 @@ test("make trade with surplus assets in Alice's payout", async (t) => {
   const helpers = makeSimpleExchangeHelpers();
 
   // Setup the contract
-  const { publicFacet, instance } = await setupUpgradableSimpleExchange(zoe, assets);
+  const { publicFacet, instance } = await setupUpgradableSimpleExchange(
+    zoe,
+    assets,
+  );
 
   const issuers = await E(zoe).getIssuers(instance);
   assertions.assertIssuer(issuers.Asset, moolaKit.issuer);
@@ -664,13 +665,13 @@ test("make trade with surplus assets in Alice's payout", async (t) => {
     expectedBuys,
     expectedSells,
     expectedAsset,
-    expectedPrice
-  )
+    expectedPrice,
+  );
 
   // Alice gives 6 moolas and Bob wants 3 moolas. Alice should retain 3 moolas
   const aliceMoolaGiveValue = 6n;
   const aliceSimoleanWantValue = 4n;
-  
+
   const bobSimoleanGiveValue = 4n;
   const bobMoolaWantValue = 3n;
 
@@ -739,12 +740,52 @@ test("make trade with surplus assets in Alice's payout", async (t) => {
   );
 
   // Assert assets are swapped
-  const bobPayout = await E(bobSeat).getPayout("Asset");
-  const alicePayout = await E(aliceSeat).getPayout("Price");
+  const bobPayout = await E(bobSeat).getPayout('Asset');
+  const alicePayout = await E(aliceSeat).getPayout('Price');
 
   const amountMoola = await E(moolaKit.issuer).getAmountOf(bobPayout);
   const amountSimolean = await E(simoleanKit.issuer).getAmountOf(alicePayout);
 
   assertions.assertPayoutAmount(amountMoola.value, bobMoolaWantValue);
   assertions.assertPayoutAmount(amountSimolean.value, aliceSimoleanWantValue);
+});
+
+test('make empty amount', async (t) => {
+  const { zoe, assets } = t.context;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
+
+  // Setup the contract
+  const { publicFacet } = await setupUpgradableSimpleExchange(zoe, assets);
+
+  // Alice makes a sell order with empty values
+  let invitation = await E(publicFacet).makeInvitation();
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+    assets,
+    0n,
+    0n,
+  );
+
+  // Alice executes the offer
+  let seat = await E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+  await eventLoopIteration();
+
+  // Assert that the offer was rejected
+  let throwPromise = E(seat).getOfferResult();
+  let expectedError = 'Asset value should not be empty';
+  await assertions.assertThrowError(throwPromise, expectedError);
+
+  // Bob makes a buy order with one value empty
+  invitation = await E(publicFacet).makeInvitation();
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(assets, 1n, 0n);
+
+  // Bob executes the offer
+  seat = await E(zoe).offer(invitation, buyOrderProposal, buyPayment);
+  await eventLoopIteration();
+
+  // Assert that the offer was rejected
+  throwPromise = E(seat).getOfferResult();
+  expectedError = 'Price value should not be empty';
+  await assertions.assertThrowError(throwPromise, expectedError);
+  
 });

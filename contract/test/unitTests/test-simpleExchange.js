@@ -585,3 +585,39 @@ test("make trade with surplus assets in Alice's payout", async (t) => {
   assertions.assertPayoutAmount(amountMoola.value, bobMoolaWantValue);
   assertions.assertPayoutAmount(amountSimolean.value, aliceSimoleanWantValue);
 });
+
+test('make empty amount', async (t) => {
+  const { zoe, assets } = t.context;
+  const assertions = makeSimpleExchangeAssertions(t);
+  const helpers = makeSimpleExchangeHelpers();
+
+  // Setup the contract
+  const { publicFacet, } = await setupSimpleExchange(zoe, assets);
+
+  let invitation = await E(publicFacet).makeInvitation();
+  const { sellOrderProposal, sellPayment } = helpers.makeSellOffer(
+    assets,
+    0n,
+    0n,
+  );
+
+  // Alice executes the offer
+  let seat = await E(zoe).offer(invitation, sellOrderProposal, sellPayment);
+
+  // Assert that the offer was rejected
+  let throwPromise = E(seat).getOfferResult();
+  let expectedError = 'Asset value should not be empty';
+  await assertions.assertThrowError(throwPromise, expectedError);
+
+  // Bob makes a buy order with one value empty
+  invitation = await E(publicFacet).makeInvitation();
+  const { buyOrderProposal, buyPayment } = helpers.makeBuyOffer(assets, 1n, 0n);
+
+  // Bob executes the offer
+  seat = await E(zoe).offer(invitation, buyOrderProposal, buyPayment);
+
+  // Assert that the offer was rejected
+  throwPromise = E(seat).getOfferResult();
+  expectedError = 'Price value should not be empty';
+  await assertions.assertThrowError(throwPromise, expectedError);
+});
