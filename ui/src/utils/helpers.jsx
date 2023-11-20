@@ -23,3 +23,8 @@ export function extractOrderDetail(order, getDisplayInfo, assetBrandName, priceB
 export function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
+
+export function isValidInput(value) {
+  const num = parseFloat(value.trim());
+  return !isNaN(num) && num > 0;
+}
