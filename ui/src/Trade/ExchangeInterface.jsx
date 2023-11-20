@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { parseAsAmount, stringifyValue } from '@agoric/ui-components';
 import { useStore } from '../store/store.js';
 import { buyOffer, makeGenericOnStatusUpdate, sellOffer } from '../utils/makeOrder.js';
+import { isValidInput } from '../utils/helpers.jsx';
 
 export function ExchangeInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -19,6 +20,8 @@ export function ExchangeInterface() {
   const priceBrand = useStore((state) => state.priceBrand);
   const getDisplayInfo = useStore((state) => state.getDisplayInfo);
   const isBuyOrder = assetLabel === 'Price:';
+  const [inputValueValid, setInputValueValid] = useState(true);
+  const [outputValueValid, setOutputValueValid] = useState(true);
   const resetInputFields = () => {
     setInputValue('');
     setOutputValue('');
@@ -40,16 +43,28 @@ export function ExchangeInterface() {
     return parseAsAmount(str, brand, assetKind, decimalPlaces);
   };
 
-  const handleInputChange = (ev, setFieldValue) => {
+  const handleInputChange = (ev, setFieldValue, setFieldValid) => {
     let value = ev.target.value;
 
     const formattedValue = value.replace(/[^0-9.]/g, '').replace(/(\..*?)\./g, '$1');
     setFieldValue(formattedValue);
+
+    const isValid = isValidInput(formattedValue);
+    setFieldValid(isValid);
   };
 
   const handleExchange = () => {
-    let parsedInput;
-    let parsedOutput;
+    const isInputValueValid = isValidInput(inputValue);
+    const isOutputValueValid = isValidInput(outputValue);
+
+    setInputValueValid(isInputValueValid);
+    setOutputValueValid(isOutputValueValid);
+
+    if (!isInputValueValid || !isOutputValueValid) {
+      return;
+    }
+
+    let parsedInput, parsedOutput;
 
     if (isBuyOrder) {
       parsedInput = parseUserInput(assetBrand, outputValue);
@@ -59,13 +74,15 @@ export function ExchangeInterface() {
       parsedOutput = parseUserInput(priceBrand, outputValue);
     }
 
-    console.log('Parsed Input:', parsedInput);
-    console.log('Parsed Output:', parsedOutput);
-
-    if (!parsedInput || !parsedOutput) {
-      console.log('Both fields are required');
+    if (!parsedInput || !parsedOutput || parsedInput.value === 0 || parsedOutput.value === 0) {
+      console.log('Both fields must have non-zero values');
+      setInputValueValid(parsedInput && parsedInput.value !== 0);
+      setOutputValueValid(parsedOutput && parsedOutput.value !== 0);
       return;
     }
+
+    console.log('Parsed Input:', parsedInput);
+    console.log('Parsed Output:', parsedOutput);
 
     let offerSpec;
     if (isBuyOrder) {
@@ -115,8 +132,8 @@ export function ExchangeInterface() {
         <input
           type="text"
           value={displayAmount({ brand: assetBrand, value: inputValue })}
-          onChange={(e) => handleInputChange(e, setInputValue)}
-          className="p-2 w-3/5 border border-gray-300 rounded"
+          onChange={(e) => handleInputChange(e, setInputValue, setInputValueValid)}
+          className={`p-2 w-3/5 border rounded ${!inputValueValid ? 'border-red-500' : 'border-gray-300'}`}
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
@@ -148,8 +165,8 @@ export function ExchangeInterface() {
         <input
           type="text"
           value={displayAmount({ brand: priceBrand, value: outputValue })}
-          onChange={(e) => handleInputChange(e, setOutputValue)}
-          className="p-2 w-3/5 border border-gray-300 rounded"
+          onChange={(e) => handleInputChange(e, setOutputValue, setOutputValueValid)}
+          className={`p-2 w-3/5 border rounded ${!outputValueValid ? 'border-red-500' : 'border-gray-300'}`}
           placeholder="0.00"
         />
         <span className="text-sm text-gray-600">
