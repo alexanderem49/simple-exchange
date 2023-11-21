@@ -11,7 +11,11 @@
     "lint-fix": "eslint --fix '**/*.{js,jsx}'",
     "lint-check": "eslint '**/*.{js,jsx}'",
     "lint-fix-jessie": "eslint -c '.eslintrc-jessie.js' --fix '**/*.{js,jsx}'",
-    "lint-check-jessie": "eslint -c '.eslintrc-jessie.js' '**/*.{js,jsx}'"
+    "lint-check-jessie": "eslint -c '.eslintrc-jessie.js' '**/*.{js,jsx}'",
+    "integration-test": "yarn test test/integrationTests",
+    "unit-test-basic": "yarn test test/unitTests/test-simpleExchange.js",
+    "unit-test-upgradable": "yarn test test/unitTests/test-upgradableSimpleExchange.js",
+    "swingset-test": "yarn test test/swingsetTests"
   },
   "devDependencies": {
     "ava": "^4.3.1",

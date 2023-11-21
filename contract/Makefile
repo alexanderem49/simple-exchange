@@ -1,4 +1,4 @@
-SDK_ROOT = $(shell cd ../../agoric-sdk >/dev/null && pwd)
+SDK_ROOT = $(shell cd ../../../agoric-sdk >/dev/null && pwd)
 AGORIC = $(SDK_ROOT)/packages/agoric-cli/bin/agoric
 AGD = $(SDK_ROOT)/bin/agd
 LOCAL_CHAIN_ID = agoriclocal
@@ -12,7 +12,7 @@ GAS_ADJUSTMENT = 1.2
 VOTE_PROPOSAL = 1
 VOTE_OPTION = yes
 
-PROPOSAL_BUILDER = ${shell pwd}/contract/src/proposal/proposalBuilder-script.js
+PROPOSAL_BUILDER = ${shell pwd}/src/proposal/proposalBuilder-script.js
 HOME = $(SDK_ROOT)/packages/cosmic-swingset/t1/bootstrap
 LOCAL_WALLET = bootstrap
 
