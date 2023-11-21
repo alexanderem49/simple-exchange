@@ -1,0 +1,62 @@
+Arguments: 
+  /Users/jorgelopes/.nvm/versions/node/v16.20.2/bin/node /usr/local/bin/yarn
+
+PATH: 
+  /Users/jorgelopes/.hermes/bin:/Users/jorgelopes/.nvm/versions/node/v16.20.2/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/jorgelopes/go/bin:/Users/jorgelopes/bin:~/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/go/bin:/Users/jorgelopes/.cargo/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  16.20.2
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: EEXIST: file already exists, mkdir '/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/simple-exchange/contract/node_modules/@agoric/swingset-vat/node_modules/@endo'
+
+npm manifest: 
+  {
+    "name": "nw-prj",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+      "preview": "vite preview"
+    },
+    "dependencies": {
+      "@agoric/rpc": "^0.6.0",
+      "@agoric/ui-components": "0.9.0",
+      "@agoric/web-components": "0.12.1-dev-74299fa.0",
+      "@headlessui/react": "1.7.17",
+      "@heroicons/react": "^2.0.18",
+      "autoprefixer": "10.4.8",
+      "postcss": "8.4.16",
+      "react": "18.2.0",
+      "react-dom": "18.2.0",
+      "react-router-dom": "6.15.0",
+      "ses": "0.18.8",
+      "tailwindcss": "3.1.8",
+      "zustand": "4.4.1"
+    },
+    "devDependencies": {
+      "@types/react": "18.2.15",
+      "@types/react-dom": "18.2.7",
+      "@vitejs/plugin-react": "4.0.3",
+      "eslint": "8.45.0",
+      "eslint-plugin-react": "7.32.2",
+      "eslint-plugin-react-hooks": "4.6.0",
+      "eslint-plugin-react-refresh": "0.4.3",
+      "vite": "4.4.5"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
