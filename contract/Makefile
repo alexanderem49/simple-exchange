@@ -9,15 +9,15 @@ DEV_WALLET = gov
 
 GAS = 40000000
 GAS_ADJUSTMENT = 1.2
-VOTE_PROPOSAL = 1
+VOTE_PROPOSAL = 2
 VOTE_OPTION = yes
 
 PROPOSAL_BUILDER = ${shell pwd}/src/proposal/proposalBuilder-script.js
 HOME = $(SDK_ROOT)/packages/cosmic-swingset/t1/bootstrap
 LOCAL_WALLET = bootstrap
 
-CONTRACT_REF_BUNDLE_ID = @cache/b1-30c28543275186d8f9301c3f6aa5c84e9279443a448b4471fd560ccf0bc0b08fe41b769f9006ffa775bf157462bb2629c90d70e9c64502cf7ca9f8344f7bbc7e.json
-MANIFEST_REF_BUNDLE_ID = @cache/b1-88585edbf550144ca45b5e0b9f8e63f7652f6a006c585523bdded62fc63ca7df7f00e09a9f961b1596506f3cff9b177b4c2e3742b3f56e4cc80df052244b8314.json
+CONTRACT_REF_BUNDLE_ID = @cache/b1-552436ef4feee071b96b2f3512d82d1309847bc1c174fc5eb8c99af7e61a03522bd11db1ab8ccc5d7b4ac6afa571f7cf3028427433c7438d32adb01bb96ec226.json
+MANIFEST_REF_BUNDLE_ID = @cache/b1-b2bb6209e466d1d7298523776513ce11c57c2eef47e52e050b5f40c2e056a03ae350c2328ad05b748ae8ee503e94c4b9ebf974aea3202643d0c7377bbe582aea.json
 
 
 # ====================================================     Make Bundles   =================================================
