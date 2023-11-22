@@ -1,7 +1,7 @@
 node_modules
 defaults.js
 installationConstants.js
-_agstate/yarn-links/
+contract/_agstate/yarn-links/
 .idea/
 .parcel-cache/
 ui/.cache/
