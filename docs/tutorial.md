@@ -127,7 +127,8 @@ make SOLO_COINS='13000000ubld,12345000000000uist,1122000000ibc/toyusdc' scenario
 
 #### Submit core-eval
 
-In a third terminal run these commands:
+For this section, the first step is to make sure that the `SDK_ROOT` path, in the [Makefile](../contract/Makefile) is pointing to your agoric-sdk.  
+If so, open a third terminal and run these commands:
 
 ```shell
 cd simple-exchange/contract
