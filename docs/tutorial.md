@@ -18,19 +18,25 @@ The tutorial page is structured as follows:
 ## Prerequisites
 
 - Follow the [installing the Agoric SDK](https://docs.agoric.com/guides/getting-started/) guide to install the Agoric Software Development Kit (SDK);
-  - <mark>Important:</mark> instead of using the community-dev branch, you need to check out the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
-- Clone the [simpleExchange repository](https://github.com/alexanderem49/simple-exchange) and run `agoric install` in the project root directory;
+  - Important: instead of using the community-dev branch, you need to check out the following revision: `92b6cd72484079b0349d8ccfa4510aeb820e8d67`, which is the one used on [Devnet](https://devnet.agoric.net/) at the moment that this component was developed.
 
-```bash
+```shell
 go version # go version go1.20.6 darwin/arm64
 node --version # v18.18.0
 npm --version # 9.8.1
 yarn --version # 1.22.5
 
 # inside agoric-sdk folder
-git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67
+`git checkout 92b6cd72484079b0349d8ccfa4510aeb820e8d67`
 yarn install && yarn build
 agoric --version # 0.21.2-u11.0
+```
+
+- Clone the [SimpleExchange repository](https://github.com/alexanderem49/simple-exchange) and install the Agoric dependencies by running the following commands:
+
+```shell
+cd simple-exchange/contract
+agoric install
 ```
 
 ## Contract Testing
@@ -59,7 +65,7 @@ Unit tests include the following test cases:
 To run unit tests, just run the following command:
 
 ```shell
-cd simple-exchange
+cd simple-exchange/contract
 yarn unit-test-basic
 yarn unit-test-upgradable
 ```
@@ -68,11 +74,11 @@ This will run all test cases in each file. You will see a lot of debug console l
 
 ### Integration tests
 
-The integration test is setting up a testing environment with 2 different smart wallets and checks that simpleExchange contract can execute a successful exchange.  
-<mark>Important:</mark> in order to run unit tests, follow these [instructions](../contract/test/integrationTests/README.md) and then run this command:
+The integration test is setting up a testing environment with 2 different smart wallets and checks that simpleExchange contract can execute a successful exchange.
+In order to run unit tests, follow these [instructions](../contract/test/integrationTests/README.md) and then run this command:
 
 ```shell
-cd simple-exchange
+cd simple-exchange/contract
 yarn integration-test
 ```
 
@@ -88,6 +94,7 @@ The swingset test includes 3 test cases:
 To run Swingset tests, just run the following command:
 
 ```shell
+cd simple-exchange/contract
 yarn swingset-test
 ```
 
@@ -95,22 +102,20 @@ yarn swingset-test
 
 The smoke tests intend to build the core-eval and deploy the simpleExchange contract in a local chain, and interact with it using shell scripts.
 
-#### Create gov1 and gov2 keys
+#### Launch local chain and client
 
 Open a new terminal and run these commands:
 
 ```shell
-agd keys add gov1 --keyring-backend=test
-agd keys add gov2 --keyring-backend=test
-```
-
-#### Launch local chain and client
-
-In the same terminal as above run these commands:
-
-```shell
 cd agoric-sdk/packages/inter-protocol/scripts
 ./start-local-chain.sh
+```
+
+If you get the following error message `FATAL ERROR:  listen EADDRINUSE: address already in use :::9464`, stop the process and execute the following commands:
+
+```shell
+lsof -i :9464
+kill <PID>
 ```
 
 In a second terminal run these commands:
@@ -125,28 +130,17 @@ make SOLO_COINS='13000000ubld,12345000000000uist,1122000000ibc/toyusdc' scenario
 In a third terminal run these commands:
 
 ```shell
-cd simple-exchange/
+cd simple-exchange/contract
 make bundle-contract
 ```
 
-Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
+Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../contract/Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.
 
 ```
-jorgelopes@Jorges-MBP my-simple-exchange % make bundle-contract
-rm -rf /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/*
-/Users/jorgelopes/Documents/GitHub/Agoric/agoric-sdk/packages/agoric-cli/bin/agoric run /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
-agoric: run: running /Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/contract/src/proposal/proposalBuilder-script.js
-agoric: run: Deploy script will run with Node.js ESM
-creating startSimpleExchange-permit.json
-creating startSimpleExchange.js
-You can now run a governance submission command like:
-  agd tx gov submit-proposal swingset-core-eval startSimpleExchange-permit.json startSimpleExchange.js \
-    --title="Enable <something>" --description="Evaluate startSimpleExchange.js" --deposit=1000000ubld \
-    --gas=auto --gas-adjustment=1.2
+...
 Remember to install bundles before submitting the proposal:
-  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-2650f4c0249bec056ff83866ab0d5aae340e29781ef5544941c1e7f1586b1bbf57c791022ff3c9d9be0d88a9b0dc9884d3fc8fa209c505d085a1117596f52e54.json
-  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/my-simple-exchange/cache/b1-60fe5d5e379113b78f3cfd5a00ff13a25d36e5c6e63c9fecaf9d586f834d8d6d53259bfe499876e3b8fc84d85e02da7e345bf6344868bb2135a69a2d81c70509.json
-
+  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/simple-exchange/contract/cache/b1-180be6a3be174c957d853e862801c3643a2897ef3e96993507fe6a02ad57d33806754bf2bc73bb2664f8536861e42d46139971f9cc85724abed9408ba1b57e8a.json
+  agd tx swingset install-bundle @/Users/jorgelopes/Documents/GitHub/Agoric/bytepitch-bounties/simple-exchange/contract/cache/b1-b2bb6209e466d1d7298523776513ce11c57c2eef47e52e050b5f40c2e056a03ae350c2328ad05b748ae8ee503e94c4b9ebf974aea3202643d0c7377bbe582aea.json
 ```
 
 After making the adjustments mentioned above, run the following command in the same terminal:
@@ -172,8 +166,8 @@ After completing the process above, you can now make sell and buy orders by runn
 
 ```shell
 cd simple-exchange/contract/test/smokeTests/
-./sellOffer
-./buyOffer
+./sellOffer.sh
+./buyOffer.sh
 ```
 
 #### Verify order book
@@ -185,6 +179,8 @@ There are 2 methods to easily query the contract state of the order book:
    - get publicFacet
    - get subscriber
    - get updated state
+
+![REPL commands](./images/REPL.png)
 
 2. [Storage Viewer](https://p2p-org.github.io/p2p-agoric-vstorage-viewer/#http://localhost:26657||)
    - load published children's keys
@@ -201,13 +197,14 @@ The build the core-eval it was required to first prepare the [simpleExchange-pro
 Open a new terminal and run the following commands:
 
 ```shell
-cd simple-exchange/
+cd simple-exchange/contract
 make bundle-contract
 ```
 
 This target will generate the [startSimpleExchange](../startSimpleExchange.js) and [startSimpleExchange-permit](../startSimpleExchange-permit.json) files in the project root, as well as the `contract` and `manifest` [bundles](../cache/).
 
-Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively. See [Smoke tests](#submit-core-eval) for more details
+Note: your terminal will print a message similar to the one below, make sure to copy the bundle IDs (`b1-265...e54.json` and `b1-60f...509.json`) and update the [Makefile](../contract/Makefile) variables `CONTRACT_REF_BUNDLE_ID` and `MANIFEST_REF_BUNDLE_ID` respectively.  
+See [Smoke tests](#submit-core-eval) for more details
 
 
 ### Setup wallet
@@ -273,10 +270,9 @@ If you wish to run the application on:
 Then, open a new terminal and run the following commands:
 
 ```shell
-cd ui
+cd simple-exchange/ui
 yarn
 yarn run dev
 ```
 
 Now, you can open your browser and go to http://localhost:5173/#trade
-

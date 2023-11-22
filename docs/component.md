@@ -48,7 +48,7 @@ const instanceFacets = await E(zoe).startInstance(
   issuerKeywordRecord,
   undefined,
   privateArgs,
-  'simpleExchange',
+  "simpleExchange"
 );
 ```
 
@@ -65,15 +65,15 @@ The `publicFacet` has two methods:
 
 ```jsx
 const publicFacet = zone.exo(
-  'PublicFacet',
-  M.interface('publicFacetI', {
+  "PublicFacet",
+  M.interface("publicFacetI", {
     getSubscriber: M.call().returns(SubscriberShape),
     makeInvitation: M.call().returns(M.promise()),
   }),
   {
     getSubscriber: () => subscriber,
     makeInvitation: makeExchangeInvitation,
-  },
+  }
 );
 ```
 
@@ -84,8 +84,8 @@ The simpleExchange contract resort to the [zone API](https://github.com/Agoric/a
 In this contract, we create 2 durable storage called sellSeatsMap and buySeatsMap, whose purpose is to hold the seat-offer pair for each order made. Every time the contract is upgraded, the contract will verify if in the baggage there already exists a key with the labels 'sellSeats' and 'buySeats'. If not, it will create a new storage. If yes, it will return the previously created storage with the respective list of orders made.
 
 ```jsx
-const sellSeatsMap = zone.mapStore('sellSeats');
-const buySeatsMap = zone.mapStore('buySeats');
+const sellSeatsMap = zone.mapStore("sellSeats");
+const buySeatsMap = zone.mapStore("buySeats");
 ```
 
 The `makeRecorderKit` method is suitable for making a durable RecorderKit which can be held in Exo state.
@@ -111,12 +111,12 @@ The makeInvitation method will validate if the proposalShape of the offer submit
 const makeExchangeInvitation = () => {
   return zcf.makeInvitation(
     exchangeOfferHandler,
-    'exchange',
+    "exchange",
     undefined,
     M.splitRecord({
       give: M.or({ Asset: AmountShape }, { Price: AmountShape }),
       want: M.or({ Asset: AmountShape }, { Price: AmountShape }),
-    }),
+    })
   );
 };
 ```
@@ -127,13 +127,15 @@ The `exchangeOfferHandler` function is responsible for retrieving proposals from
 
 There is also the necessity to validate if the brands of the Asset and Price are the same as the ones defined when the contract was instantiated. That is done to eliminate the possibility of a user submitting an offer with a different brand than the one defined specifically for the Asset and Price. Without this validation, if the contract deployed with Asset brand as moola and Price brand as simolean, a user could submit an offer with Asset brand as simolean and Price brand as moola, which would be invalid.
 
+
+
 After identifying the type of order that is being submitted, the `swapIfCanTradeAndUpdateBook` method will be called, where the order of the map of user seats passed as arguments, where 1 argument is the map of user seats that will be used to find a counteroffer, and the other argument is the map of user seats that will be used to store the new order.
 
 The `swapIfCanTradeAndUpdateBook` is responsible for updating the maps of buys and sells orders based on the returned object from the `swapIfCanTrade` method - if it is able to find a counteroffer and execute the trade, the counteroffer will be returned and it will be removed from the map, otherwise, undefined will be returned and the order will be added to the map.
 
 ```jsx
 // The invitation handler will retrieve the offer proposal and based on it,
-//It will identify if it is a sell or buy order, and act accordingly.
+// it will identify if it is a sell or buy order, and act accordingly.
 const exchangeOfferHandler = (seat) => {
   const { want, give } = seat.getProposal();
 
@@ -144,18 +146,22 @@ const exchangeOfferHandler = (seat) => {
 
   if (asset.brand !== Asset || price.brand !== Price) {
     seat.fail();
-    return new Error('Brand mismatch');
+    return new Error("Brand mismatch");
   }
+
+  // Validate there are not empty values on the offer amounts
+  assert(!AmountMath.isEmpty(asset), "Asset value should not be empty");
+  assert(!AmountMath.isEmpty(price), "Price value should not be empty");
 
   // A Buy order is an offer that wants Asset and gives Price and vice-versa.
   // Based on the order, the contract will try to execute an exchange with the
   // respective counterOffers list.
   if (want.Asset) {
     swapIfCanTradeAndUpdateBook(sellSeatsMap, buySeatsMap, seat);
-    return 'Order Added';
+    return "Order Added";
   } else if (give.Asset) {
     swapIfCanTradeAndUpdateBook(buySeatsMap, sellSeatsMap, seat);
-    return 'Order Added';
+    return "Order Added";
   }
 };
 ```
