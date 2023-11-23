@@ -102,9 +102,20 @@ yarn swingset-test
 
 The smoke tests intend to build the core-eval and deploy the simpleExchange contract in a local chain, and interact with it using shell scripts.
 
-#### Launch local chain and client
+#### Create gov1 and gov2 keys
 
 Open a new terminal and run these commands:
+
+```shell
+agd keys add gov1 --keyring-backend=test
+agd keys add gov2 --keyring-backend=test
+```
+
+Note: save the `mnemonic phrase` printed in the terminal in a safe place. They will be useful if you wish import this account to the Keplr wallet.
+
+#### Launch local chain and client
+
+In the same terminal as above run these commands:
 
 ```shell
 cd agoric-sdk/packages/inter-protocol/scripts
@@ -279,10 +290,9 @@ yarn run dev
 Now, you can open your browser and go to http://localhost:5173/#trade
 
 
-# Tutorial for Using Multiple Users for Testing with Wallet Extensions
+### Multiple Users Test with Keplr Wallet Extension
 
-## Introduction
-In this guide, we'll demonstrate how to test multi-user functionality using a wallet extension like Keplr. We'll use two different users, Jorge and Emma, to show how transactions and orders appear for separate accounts.
+In this guide, we'll demonstrate how to test multi-user functionality using a wallet extension like Keplr. We'll use two different users, Bob and Emma, to show how transactions and orders appear for separate accounts.
 
 ## Requirements
 - Keplr wallet extension installed in your browser.
@@ -291,37 +301,36 @@ In this guide, we'll demonstrate how to test multi-user functionality using a wa
 
 ## Steps
 
-### Setting Up the First User (Jorge)
+### Setting Up the First User (Bob)
 1. Open a new browser or a new user profile.
-2. Install the Keplr wallet extension if not already installed.
+2. Open the Keplr wallet extension.
 3. Click on 'Import existing wallet'.
 4. Choose 'Use Recovery Phrase or Private Key'.
-5. Select the '24 words' option and insert the first government key.
+5. Select the '24 words' option and insert the first government key (gov1).
 6. Navigate to `http://localhost:5173/#trade` and connect to the wallet.
 
-### Creating a Sell Order as Jorge
+### Creating a Sell Order as Bob
 1. Place a sell order, e.g., sell `0.002 BLD` for `0.001 IST`.
 2. If the transaction is successful, check the 'Order Book' and 'Your Orders' tab to see your order.
 
 ### Setting Up the Second User (Emma)
-1. Open a new browser or user profile different from Jorge's.
-2. Follow the same steps to set up the wallet, but use the second government key.
+1. Open a new browser or user profile different from Bob's.
+2. Follow the same steps to set up the wallet, but use the second government key (gov2).
 3. Connect to `http://localhost:5173/#trade` with the new wallet.
 
-### Viewing Jorge's Sell Order as Emma
-1. As Emma, you will see Jorge's sell order in the 'Order Book'.
-2. However, it won't appear in Emma's 'Your Orders' tab as it belongs to Jorge.
+### Viewing Bob's Sell Order as Emma
+1. As Emma, you will see Bob's sell order in the 'Order Book'.
+2. However, it won't appear in Emma's 'Your Orders' tab as it belongs to Bob.
 
 ### Creating a Sell Order as Emma
 1. Place a sell order, like `0.001 BLD` for `0.03 IST`.
 2. Upon successful transaction, this order will appear in both the 'Order Book' and Emma's 'Your Orders' tab.
 
 ### Matching Orders Between Users
-1. As Jorge, create a buy order matching Emma's sell order, for instance, `0.03 IST` for `0.001 BLD`.
+1. As Bob, create a buy order matching Emma's sell order, for instance, `0.03 IST` for `0.001 BLD`.
 2. If the orders match, they will disappear from the 'Order Book'.
 3. The matched order will no longer be visible in either user's 'Your Orders' tab.
 
 ## Conclusion
 Through these steps, you can simulate a trading scenario with two different users. 
 This demonstrates how orders are specific to each user's wallet and how matched orders are processed and removed from the system. 
-Happy testing!
