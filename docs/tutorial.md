@@ -294,14 +294,14 @@ Now, you can open your browser and go to http://localhost:5173/#trade
 
 In this guide, we'll demonstrate how to test multi-user functionality using a wallet extension like Keplr. We'll use two different users, Bob and Emma, to show how transactions and orders appear for separate accounts.
 
-## Requirements
+#### Requirements
 - Keplr wallet extension installed in your browser.
 - Access to a local server (`http://localhost:5173/#trade`).
 - Two sets of government keys for wallet setup.
 
-## Steps
+#### Steps
 
-### Setting Up the First User (Bob)
+##### Setting Up the First User (Bob)
 1. Open a new browser or a new user profile.
 2. Open the Keplr wallet extension.
 3. Click on 'Import existing wallet'.
@@ -309,28 +309,28 @@ In this guide, we'll demonstrate how to test multi-user functionality using a wa
 5. Select the '24 words' option and insert the first government key (gov1).
 6. Navigate to `http://localhost:5173/#trade` and connect to the wallet.
 
-### Creating a Sell Order as Bob
+##### Creating a Sell Order as Bob
 1. Place a sell order, e.g., sell `0.002 BLD` for `0.001 IST`.
 2. If the transaction is successful, check the 'Order Book' and 'Your Orders' tab to see your order.
 
-### Setting Up the Second User (Emma)
+##### Setting Up the Second User (Emma)
 1. Open a new browser or user profile different from Bob's.
 2. Follow the same steps to set up the wallet, but use the second government key (gov2).
 3. Connect to `http://localhost:5173/#trade` with the new wallet.
 
-### Viewing Bob's Sell Order as Emma
+##### Viewing Bob's Sell Order as Emma
 1. As Emma, you will see Bob's sell order in the 'Order Book'.
 2. However, it won't appear in Emma's 'Your Orders' tab as it belongs to Bob.
 
-### Creating a Sell Order as Emma
+##### Creating a Sell Order as Emma
 1. Place a sell order, like `0.001 BLD` for `0.03 IST`.
 2. Upon successful transaction, this order will appear in both the 'Order Book' and Emma's 'Your Orders' tab.
 
-### Matching Orders Between Users
+##### Matching Orders Between Users
 1. As Bob, create a buy order matching Emma's sell order, for instance, `0.03 IST` for `0.001 BLD`.
 2. If the orders match, they will disappear from the 'Order Book'.
 3. The matched order will no longer be visible in either user's 'Your Orders' tab.
 
-## Conclusion
+#### Conclusion
 Through these steps, you can simulate a trading scenario with two different users. 
 This demonstrates how orders are specific to each user's wallet and how matched orders are processed and removed from the system. 
