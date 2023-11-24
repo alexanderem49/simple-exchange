@@ -22,6 +22,7 @@ For the contracts and tests we included in-line comments to facilitate the under
 - Documentation
   - Component
   - Tutorial
+- UI
 
 ## Community
 Any feedback is welcome, so feel free to share your ideas or improvements, by opening an issue or pull request.
